@@ -94,6 +94,19 @@ export default function Dashboard() {
     setEnCours(null);
   }
 
+  async function supprimerMembre(id: string, nomComplet: string) {
+    const confirmation = window.confirm(
+      `Supprimer définitivement ${nomComplet} ? Cette action est irréversible.`
+    );
+    if (!confirmation) return;
+
+    setEnCours(id);
+    const { error } = await supabase.from("membres").delete().eq("id", id);
+    if (error) alert("Erreur : " + error.message);
+    await chargerDonnees();
+    setEnCours(null);
+  }
+
   if (!pret) {
     return (
       <main className="container section">
@@ -202,9 +215,18 @@ export default function Dashboard() {
                       📞 {m.telephone} · ✉️ {m.email}
                     </p>
                   </div>
-                  <p style={{ fontFamily: "monospace", color: "var(--emerald)", fontWeight: 600 }}>
-                    {m.numero_membre}
-                  </p>
+                  <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                    <p style={{ fontFamily: "monospace", color: "var(--emerald)", fontWeight: 600, margin: 0 }}>
+                      {m.numero_membre}
+                    </p>
+                    <button
+                      className="btn btn-outline"
+                      disabled={enCours === m.id}
+                      onClick={() => supprimerMembre(m.id, `${m.prenom} ${m.nom}`)}
+                    >
+                      🗑️ Supprimer
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
