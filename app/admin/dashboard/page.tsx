@@ -22,6 +22,9 @@ type Membre = {
   prenom: string;
   nom: string;
   classe: string;
+  telephone: string;
+  email: string;
+  annee_scolaire: string;
   statut: string;
 };
 
@@ -70,7 +73,7 @@ export default function Dashboard() {
 
     const { data: mem } = await supabase
       .from("membres")
-      .select("id, numero_membre, prenom, nom, classe, statut")
+      .select("id, numero_membre, prenom, nom, classe, telephone, email, annee_scolaire, statut")
       .order("cree_le", { ascending: false });
     setMembres((mem as Membre[]) ?? []);
   }
@@ -187,12 +190,17 @@ export default function Dashboard() {
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {membres.map((m) => (
-                <div key={m.id} className="card" style={{ display: "flex", justifyContent: "space-between" }}>
+                <div key={m.id} className="card" style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
                   <div>
                     <p style={{ fontWeight: 600, margin: 0 }}>
                       {m.prenom} {m.nom}
                     </p>
-                    <p style={{ color: "#6b6656", margin: 0 }}>{m.classe}</p>
+                    <p style={{ color: "#6b6656", margin: 0 }}>
+                      {m.classe} · {m.annee_scolaire}
+                    </p>
+                    <p style={{ color: "#6b6656", margin: 0 }}>
+                      📞 {m.telephone} · ✉️ {m.email}
+                    </p>
                   </div>
                   <p style={{ fontFamily: "monospace", color: "var(--emerald)", fontWeight: 600 }}>
                     {m.numero_membre}
