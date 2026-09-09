@@ -17,6 +17,15 @@ export default function Contact() {
               Tu peux aussi nous contacter directement au bureau du club ou via
               nos réseaux sociaux.
             </p>
+            
+              href="https://wa.me/221788512779"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-primary"
+              style={{ background: "#25D366", marginTop: 8 }}
+            >
+              💬 Nous écrire sur WhatsApp
+            </a>
           </div>
           <ContactForm />
         </div>
