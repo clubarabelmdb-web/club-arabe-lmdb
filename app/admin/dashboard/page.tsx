@@ -15,6 +15,7 @@ type Inscription = {
   annee_scolaire: string;
   statut: string;
   cree_le: string;
+  photo_url: string | null;
 };
 
 type Membre = {
@@ -27,6 +28,7 @@ type Membre = {
   email: string;
   annee_scolaire: string;
   statut: string;
+  photo_url: string | null;
 };
 
 export default function Dashboard() {
@@ -74,7 +76,7 @@ export default function Dashboard() {
 
     const { data: mem } = await supabase
       .from("membres")
-      .select("id, numero_membre, prenom, nom, classe, telephone, email, annee_scolaire, statut")
+      .select("id, numero_membre, prenom, nom, classe, telephone, email, annee_scolaire, statut, photo_url")
       .order("cree_le", { ascending: false });
     setMembres((mem as Membre[]) ?? []);
   }
@@ -125,7 +127,7 @@ export default function Dashboard() {
           <p className="eyebrow-line">Espace administrateur</p>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
             <h1 style={{ fontSize: "1.9rem", margin: 0 }}>Tableau de bord</h1>
-                                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               <Link href="/admin/verification" className="btn btn-outline">
                 🪪 Vérifier une carte
               </Link>
@@ -134,6 +136,9 @@ export default function Dashboard() {
               </Link>
               <Link href="/admin/paiements" className="btn btn-outline">
                 💰 Paiements
+              </Link>
+              <Link href="/admin/actualites" className="btn btn-outline">
+                📰 Actualités
               </Link>
             </div>
           </div>
@@ -184,13 +189,41 @@ export default function Dashboard() {
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 {enAttente.map((i) => (
                   <div key={i.id} className="card" style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
-                    <div>
-                      <p style={{ fontWeight: 600, margin: 0 }}>
-                        {i.prenom} {i.nom}
-                      </p>
-                      <p style={{ color: "#6b6656", margin: 0 }}>
-                        {i.classe} · {i.annee_scolaire} · {i.telephone} · {i.email}
-                      </p>
+                    <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+                      {i.photo_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={i.photo_url}
+                          alt={`${i.prenom} ${i.nom}`}
+                          style={{ width: 52, height: 52, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
+                        />
+                      ) : (
+                        <div
+                          style={{
+                            width: 52,
+                            height: 52,
+                            borderRadius: "50%",
+                            background: "var(--emerald-soft)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontWeight: 700,
+                            color: "var(--emerald-deep)",
+                            flexShrink: 0,
+                          }}
+                        >
+                          {i.prenom[0]}
+                          {i.nom[0]}
+                        </div>
+                      )}
+                      <div>
+                        <p style={{ fontWeight: 600, margin: 0 }}>
+                          {i.prenom} {i.nom}
+                        </p>
+                        <p style={{ color: "#6b6656", margin: 0 }}>
+                          {i.classe} · {i.annee_scolaire} · {i.telephone} · {i.email}
+                        </p>
+                      </div>
                     </div>
                     <div style={{ display: "flex", gap: 10 }}>
                       <button
@@ -218,16 +251,44 @@ export default function Dashboard() {
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {membres.map((m) => (
                 <div key={m.id} className="card" style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
-                  <div>
-                    <p style={{ fontWeight: 600, margin: 0 }}>
-                      {m.prenom} {m.nom}
-                    </p>
-                    <p style={{ color: "#6b6656", margin: 0 }}>
-                      {m.classe} · {m.annee_scolaire}
-                    </p>
-                    <p style={{ color: "#6b6656", margin: 0 }}>
-                      📞 {m.telephone} · ✉️ {m.email}
-                    </p>
+                  <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+                    {m.photo_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={m.photo_url}
+                        alt={`${m.prenom} ${m.nom}`}
+                        style={{ width: 52, height: 52, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          width: 52,
+                          height: 52,
+                          borderRadius: "50%",
+                          background: "var(--emerald-soft)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontWeight: 700,
+                          color: "var(--emerald-deep)",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {m.prenom[0]}
+                        {m.nom[0]}
+                      </div>
+                    )}
+                    <div>
+                      <p style={{ fontWeight: 600, margin: 0 }}>
+                        {m.prenom} {m.nom}
+                      </p>
+                      <p style={{ color: "#6b6656", margin: 0 }}>
+                        {m.classe} · {m.annee_scolaire}
+                      </p>
+                      <p style={{ color: "#6b6656", margin: 0 }}>
+                        📞 {m.telephone} · ✉️ {m.email}
+                      </p>
+                    </div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                     <p style={{ fontFamily: "monospace", color: "var(--emerald)", fontWeight: 600, margin: 0 }}>
