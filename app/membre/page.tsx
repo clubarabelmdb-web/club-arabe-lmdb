@@ -170,7 +170,41 @@ export default function EspaceMembre() {
                 Lycée Maba Diakhou Ba
               </p>
 
-              <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
+              <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
+                {membre.photo_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={membre.photo_url}
+                    alt={`${membre.prenom} ${membre.nom}`}
+                    style={{
+                      width: 72,
+                      height: 72,
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                      border: "2px solid var(--gold-soft)",
+                      flexShrink: 0,
+                    }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: 72,
+                      height: 72,
+                      borderRadius: "50%",
+                      background: "var(--gold-soft)",
+                      color: "var(--emerald-deep)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: 700,
+                      fontSize: "1.3rem",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {membre.prenom[0]}
+                    {membre.nom[0]}
+                  </div>
+                )}
                 <div style={{ background: "#fff", padding: 8, display: "inline-block" }}>
                   <QRCodeSVG value={membre.numero_membre} size={92} />
                 </div>
