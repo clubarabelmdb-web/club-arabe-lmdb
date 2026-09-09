@@ -17,7 +17,7 @@ export default function Contact() {
               Tu peux aussi nous contacter directement au bureau du club ou via
               nos réseaux sociaux.
             </p>
-            
+            <a
               href="https://wa.me/221788512779"
               target="_blank"
               rel="noopener noreferrer"
