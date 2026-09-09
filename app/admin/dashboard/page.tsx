@@ -125,9 +125,14 @@ export default function Dashboard() {
           <p className="eyebrow-line">Espace administrateur</p>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
             <h1 style={{ fontSize: "1.9rem", margin: 0 }}>Tableau de bord</h1>
-            <Link href="/admin/galerie" className="btn btn-outline">
-              📸 Gérer la galerie
-            </Link>
+                      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <Link href="/admin/verification" className="btn btn-outline">
+                🪪 Vérifier une carte
+              </Link>
+              <Link href="/admin/galerie" className="btn btn-outline">
+                📸 Gérer la galerie
+              </Link>
+            </div>
           </div>
 
           <div className="grid-4" style={{ marginTop: 24 }}>
