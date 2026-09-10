@@ -4,6 +4,7 @@ const links = [
   { href: "/", label: "Accueil" },
   { href: "/a-propos", label: "À propos" },
   { href: "/actualites", label: "Actualités" },
+  { href: "/activites", label: "Activités" },
   { href: "/galerie", label: "Galerie" },
   { href: "/contact", label: "Contact" },
 ];

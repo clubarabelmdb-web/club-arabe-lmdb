@@ -140,6 +140,9 @@ export default function Dashboard() {
               <Link href="/admin/actualites" className="btn btn-outline">
                 📰 Actualités
               </Link>
+              <Link href="/admin/activites" className="btn btn-outline">
+                📅 Activités
+              </Link>
             </div>
           </div>
 
