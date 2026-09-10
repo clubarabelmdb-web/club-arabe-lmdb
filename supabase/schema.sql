@@ -221,6 +221,25 @@ alter table messages enable row level security;
 alter table notifications enable row level security;
 alter table messages_contact enable row level security;
 
+-- Permet de relancer ce fichier sans erreur si les policies existent déjà.
+drop policy if exists "Inscription publique" on inscriptions;
+drop policy if exists "Contact public" on messages_contact;
+drop policy if exists "Actualités visibles par tous" on actualites;
+drop policy if exists "Activités visibles par tous" on activites;
+drop policy if exists "Albums visibles par tous" on albums;
+drop policy if exists "Photos visibles par tous" on photos;
+drop policy if exists "Un membre voit son profil" on membres;
+drop policy if exists "Un membre voit ses notifications" on notifications;
+drop policy if exists "Admin accès total inscriptions" on inscriptions;
+drop policy if exists "Admin accès total membres" on membres;
+drop policy if exists "Admin accès total actualites" on actualites;
+drop policy if exists "Admin accès total activites" on activites;
+drop policy if exists "Admin accès total albums" on albums;
+drop policy if exists "Admin accès total photos" on photos;
+drop policy if exists "Admin accès total messages" on messages;
+drop policy if exists "Admin accès total contact" on messages_contact;
+drop policy if exists "Admin voit tous les admins" on administrateurs;
+
 -- Tout le monde peut créer une demande d'inscription et envoyer un message contact
 create policy "Inscription publique" on inscriptions for insert to anon, authenticated with check (true);
 create policy "Contact public" on messages_contact for insert to anon, authenticated with check (true);
