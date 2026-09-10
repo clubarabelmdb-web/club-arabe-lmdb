@@ -33,7 +33,7 @@ export default async function Accueil() {
         }}
       >
         <GeometricPattern
-          color="#b68a35"
+                    color="#c9a227"
           opacity={0.18}
           className="hero-pattern"
         />

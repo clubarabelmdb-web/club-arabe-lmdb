@@ -1,13 +1,13 @@
 :root {
-  --ink: #201d18;
-  --parchment: #f4efe1;
-  --parchment-warm: #ece3cc;
-  --emerald: #0d4b3e;
-  --emerald-deep: #082e27;
-  --emerald-soft: #e4ece9;
-  --gold: #b68a35;
-  --gold-soft: #ddc890;
-  --line: #d9cfad;
+  --ink: #1f2933;
+  --parchment: #f8f7f2;
+  --parchment-warm: #f1eee3;
+  --emerald: #198754;
+  --emerald-deep: #0f5132;
+  --emerald-soft: #eef5f0;
+  --gold: #c9a227;
+  --gold-soft: #e3cd7e;
+  --line: #dce3d7;
   --max-width: 1120px;
 }
 

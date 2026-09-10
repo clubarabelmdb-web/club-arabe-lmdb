@@ -1,7 +1,7 @@
 // Motif d'entrelacs à 8 branches (inspiré des lattices géométriques arabo-andalouses)
 // Utilisé comme accent visuel discret, jamais comme simple décor répété partout.
 export default function GeometricPattern({
-  color = "#b68a35",
+  color = "#c9a227",
   opacity = 0.16,
   className = "",
 }: {
