@@ -1,11 +1,7 @@
-export const metadata = { title: "À propos — Club Arabe LMDB" };
+import { createClient } from "@/lib/supabaseClient";
 
-const bureau = [
-  { role: "Président(e)", nom: "À définir" },
-  { role: "Vice-président(e)", nom: "À définir" },
-  { role: "Secrétaire", nom: "À définir" },
-  { role: "Trésorier(ère)", nom: "À définir" },
-];
+export const metadata = { title: "À propos — Club Arabe LMDB" };
+export const revalidate = 60;
 
 const activites = [
   "Apprentissage de l'arabe",
@@ -18,7 +14,19 @@ const activites = [
   "Activités éducatives",
 ];
 
-export default function APropos() {
+async function getBureau() {
+  try {
+    const supabase = createClient();
+    const { data } = await supabase.from("bureau").select("*").order("ordre", { ascending: true });
+    return data ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export default async function APropos() {
+  const bureau = await getBureau();
+
   return (
     <main>
       <section className="section" style={{ paddingBottom: 24 }}>
@@ -97,9 +105,9 @@ export default function APropos() {
           <p className="eyebrow-line">Organisation</p>
           <h2 style={{ fontSize: "1.6rem" }}>Le bureau du club</h2>
           <div className="grid-4" style={{ marginTop: 24 }}>
-            {bureau.map((b) => (
-              <div key={b.role} className="card" style={{ textAlign: "center" }}>
-                <p style={{ fontWeight: 600, color: "var(--emerald-deep)" }}>{b.role}</p>
+            {bureau.map((b: any) => (
+              <div key={b.id} className="card" style={{ textAlign: "center" }}>
+                <p style={{ fontWeight: 600, color: "var(--emerald-deep)" }}>{b.poste}</p>
                 <p style={{ color: "#6b6656" }}>{b.nom}</p>
               </div>
             ))}
