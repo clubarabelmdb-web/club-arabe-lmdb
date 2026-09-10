@@ -11,6 +11,7 @@ create extension if not exists "uuid-ossp";
 -- ------------------------------------------------------------
 create table if not exists inscriptions (
   id uuid primary key default uuid_generate_v4(),
+  user_id uuid references auth.users(id) on delete set null,
   prenom text not null,
   nom text not null,
   classe text not null,
@@ -22,6 +23,8 @@ create table if not exists inscriptions (
   cree_le timestamptz not null default now(),
   traite_le timestamptz
 );
+
+alter table inscriptions add column if not exists user_id uuid references auth.users(id) on delete set null;
 
 -- ------------------------------------------------------------
 -- 2. MEMBRES (créés automatiquement après validation)
@@ -89,6 +92,8 @@ begin
   insert into membres (numero_membre, prenom, nom, classe, telephone, email, annee_scolaire, photo_url, inscription_id)
   values (generer_numero_membre(), insc.prenom, insc.nom, insc.classe, insc.telephone, insc.email, insc.annee_scolaire, insc.photo_url, insc.id)
   returning * into nouveau_membre;
+
+  update membres set user_id = insc.user_id where id = nouveau_membre.id;
 
   update inscriptions set statut = 'accepte', traite_le = now() where id = inscription_id_param;
 

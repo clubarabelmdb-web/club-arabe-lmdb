@@ -83,8 +83,16 @@ export default function Dashboard() {
 
   async function valider(id: string) {
     setEnCours(id);
-    const { error } = await supabase.rpc("valider_inscription", { inscription_id_param: id });
-    if (error) alert("Erreur : " + error.message);
+    const { error } = await supabase.rpc("valider_inscription", {
+      inscription_id_param: id,
+    });
+
+    if (error) {
+      alert("Erreur : " + error.message);
+      setEnCours(null);
+      return;
+    }
+
     await chargerDonnees();
     setEnCours(null);
   }

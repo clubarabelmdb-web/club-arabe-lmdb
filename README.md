@@ -74,8 +74,8 @@ Ouvre [http://localhost:3000](http://localhost:3000).
 2. Va sur [vercel.com](https://vercel.com) → connecte-toi avec GitHub →
    **Add New Project** → sélectionne ton dépôt.
 3. Dans les réglages du projet Vercel, ajoute les mêmes variables
-   d'environnement que dans `.env.local` (`NEXT_PUBLIC_SUPABASE_URL` et
-   `NEXT_PUBLIC_SUPABASE_ANON_KEY`).
+d'environnement que dans `.env.local` (`NEXT_PUBLIC_SUPABASE_URL` et
+`NEXT_PUBLIC_SUPABASE_ANON_KEY`).
 4. Clique **Deploy**. Ton site sera en ligne sur une adresse du type
    `club-arabe-lmdb.vercel.app` (tu pourras ajouter un nom de domaine plus
    tard si tu en achètes un).
@@ -99,8 +99,6 @@ Ouvre [http://localhost:3000](http://localhost:3000).
 - Publication/édition des actualités et albums photos depuis le tableau de
   bord admin (actuellement à faire directement dans Supabase, en attendant
   une interface dédiée)
-- Envoi de vrais e-mails automatiques (ex. via [Resend](https://resend.com),
-  gratuit jusqu'à un certain volume)
 - Export PDF de la carte de membre
 - Messagerie ciblée (par classe / membres choisis) depuis l'admin
 - Page « Activités et événements » avec archives

@@ -19,8 +19,18 @@ export default function InscriptionForm() {
 
     let photoUrl: string | null = null;
     const photoFile = formData.get("photo") as File;
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
 
     try {
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+      if (authError || !authData.user) {
+        throw authError ?? new Error("Le compte n'a pas pu être créé.");
+      }
+
       if (photoFile && photoFile.size > 0) {
         const chemin = `inscriptions/${Date.now()}-${photoFile.name}`;
         const { error: uploadError } = await supabase.storage
@@ -39,9 +49,11 @@ export default function InscriptionForm() {
         email: formData.get("email"),
         annee_scolaire: formData.get("annee_scolaire"),
         photo_url: photoUrl,
+        user_id: authData.user.id,
       });
 
       if (error) throw error;
+
       setStatut("envoye");
     } catch (err: any) {
       setErreur(err.message ?? "Une erreur est survenue. Réessaie.");
@@ -54,9 +66,9 @@ export default function InscriptionForm() {
       <div className="card" style={{ borderColor: "var(--emerald)", background: "var(--emerald-soft)" }}>
         <h2 style={{ color: "var(--emerald-deep)", fontSize: "1.3rem" }}>Demande envoyée !</h2>
         <p style={{ color: "#2f4b43" }}>
-          Ta demande d'inscription est en attente de validation. L'administration
-          du club va vérifier tes informations. Tu recevras une notification dès
-          que ta demande sera traitée.
+          Ton compte est créé et ta demande est en attente de validation. Après
+          acceptation, tu pourras te connecter dans l'espace membre avec ton
+          adresse e-mail et ce mot de passe.
         </p>
       </div>
     );
@@ -104,6 +116,11 @@ export default function InscriptionForm() {
           <label htmlFor="email">Adresse e-mail</label>
           <input id="email" name="email" type="email" required />
         </div>
+      </div>
+
+      <div className="field">
+        <label htmlFor="password">Mot de passe du compte (6 caractères minimum)</label>
+        <input id="password" name="password" type="password" minLength={6} required />
       </div>
 
       <div className="field">
