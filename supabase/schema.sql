@@ -275,6 +275,9 @@ create policy "Admin accès total contact" on messages_contact for all to authen
 create policy "Admin voit tous les admins" on administrateurs for select to authenticated
   using (exists (select 1 from administrateurs where user_id = auth.uid()));
 
+-- Recharger le cache PostgREST après les changements de structure.
+notify pgrst, 'reload schema';
+
 -- ============================================================
 -- Pour créer ton premier compte admin :
 -- 1. Crée un utilisateur dans Authentication > Users (email + mot de passe)
