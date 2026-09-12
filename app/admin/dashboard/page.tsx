@@ -81,18 +81,38 @@ export default function Dashboard() {
     setMembres((mem as Membre[]) ?? []);
   }
 
-  async function valider(id: string) {
+   async function valider(id: string) {
     setEnCours(id);
-    const { error } = await supabase.rpc("valider_inscription", {
+    const { data: nouveauMembre, error } = await supabase.rpc("valider_inscription", {
       inscription_id_param: id,
     });
-
     if (error) {
       alert("Erreur : " + error.message);
       setEnCours(null);
       return;
     }
 
+    // Crée automatiquement le compte du membre et lui envoie l'invitation
+    try {
+      const reponse = await fetch("/api/inviter-membre", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ membreId: nouveauMembre.id }),
+      });
+      if (!reponse.ok) {
+        const { error: erreurInvitation } = await reponse.json();
+        alert(
+          "Le membre a été validé, mais l'envoi de l'invitation a échoué : " +
+            erreurInvitation
+        );
+      }
+    } catch {
+      alert("Le membre a été validé, mais l'envoi de l'invitation a échoué.");
+    }
+
+    await chargerDonnees();
+    setEnCours(null);
+  }
     await chargerDonnees();
     setEnCours(null);
   }
