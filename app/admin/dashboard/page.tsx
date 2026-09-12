@@ -143,4 +143,200 @@ export default function Dashboard() {
     );
   }
 
-  const enAttente = inscriptions.filter((i) => i.statut === "en_attente");
+  const enAttente = inscriptions.filter((i) => i.statut === "en_attente");  return (
+    <main>
+      <section className="section" style={{ paddingBottom: 24 }}>
+        <div className="container">
+          <p className="eyebrow-line">Espace administrateur</p>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+            <h1 style={{ fontSize: "1.9rem", margin: 0 }}>Tableau de bord</h1>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <Link href="/admin/verification" className="btn btn-outline">
+                🪪 Vérifier une carte
+              </Link>
+              <Link href="/admin/galerie" className="btn btn-outline">
+                📸 Gérer la galerie
+              </Link>
+              <Link href="/admin/paiements" className="btn btn-outline">
+                💰 Paiements
+              </Link>
+              <Link href="/admin/actualites" className="btn btn-outline">
+                📰 Actualités
+              </Link>
+              <Link href="/admin/activites" className="btn btn-outline">
+                📅 Activités
+              </Link>
+              <Link href="/admin/bureau" className="btn btn-outline">
+                👥 Bureau
+              </Link>
+            </div>
+          </div>
+
+          <div className="grid-4" style={{ marginTop: 24 }}>
+            <div className="card">
+              <p style={{ fontSize: "2rem", color: "var(--emerald-deep)", margin: 0 }}>
+                {membres.length}
+              </p>
+              <p style={{ color: "#6b6656", margin: 0 }}>Membres</p>
+            </div>
+            <div className="card">
+              <p style={{ fontSize: "2rem", color: "var(--gold)", margin: 0 }}>{enAttente.length}</p>
+              <p style={{ color: "#6b6656", margin: 0 }}>Demandes en attente</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="container">
+        <div style={{ display: "flex", gap: 8, borderBottom: "1px solid var(--line)" }}>
+          {(["demandes", "membres"] as const).map((o) => (
+            <button
+              key={o}
+              onClick={() => setOnglet(o)}
+              className="btn"
+              style={{
+                borderRadius: 0,
+                background: "transparent",
+                borderBottom: onglet === o ? "3px solid var(--emerald)" : "3px solid transparent",
+                color: onglet === o ? "var(--emerald-deep)" : "#6b6656",
+                padding: "10px 4px",
+                marginRight: 24,
+              }}
+            >
+              {o === "demandes" ? `Demandes (${enAttente.length})` : `Membres (${membres.length})`}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="container">
+          {onglet === "demandes" ? (
+            enAttente.length === 0 ? (
+              <p style={{ color: "#6b6656" }}>Aucune demande en attente.</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                {enAttente.map((i) => (
+                  <div key={i.id} className="card" style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+                    <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+                      {i.photo_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={i.photo_url}
+                          alt={`${i.prenom} ${i.nom}`}
+                          style={{ width: 52, height: 52, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
+                        />
+                      ) : (
+                        <div
+                          style={{
+                            width: 52,
+                            height: 52,
+                            borderRadius: "50%",
+                            background: "var(--emerald-soft)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontWeight: 700,
+                            color: "var(--emerald-deep)",
+                            flexShrink: 0,
+                          }}
+                        >
+                          {i.prenom[0]}
+                          {i.nom[0]}
+                        </div>
+                      )}
+                      <div>
+                        <p style={{ fontWeight: 600, margin: 0 }}>
+                          {i.prenom} {i.nom}
+                        </p>
+                        <p style={{ color: "#6b6656", margin: 0 }}>
+                          {i.classe} · {i.annee_scolaire} · {i.telephone} · {i.email}
+                        </p>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 10 }}>
+                      <button
+                        className="btn btn-primary"
+                        disabled={enCours === i.id}
+                        onClick={() => valider(i.id)}
+                      >
+                        ✅ Valider
+                      </button>
+                      <button
+                        className="btn btn-outline"
+                        disabled={enCours === i.id}
+                        onClick={() => refuser(i.id)}
+                      >
+                        ❌ Refuser
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
+          ) : membres.length === 0 ? (
+            <p style={{ color: "#6b6656" }}>Aucun membre pour le moment.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {membres.map((m) => (
+                <div key={m.id} className="card" style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+                  <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+                    {m.photo_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={m.photo_url}
+                        alt={`${m.prenom} ${m.nom}`}
+                        style={{ width: 52, height: 52, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          width: 52,
+                          height: 52,
+                          borderRadius: "50%",
+                          background: "var(--emerald-soft)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontWeight: 700,
+                          color: "var(--emerald-deep)",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {m.prenom[0]}
+                        {m.nom[0]}
+                      </div>
+                    )}
+                    <div>
+                      <p style={{ fontWeight: 600, margin: 0 }}>
+                        {m.prenom} {m.nom}
+                      </p>
+                      <p style={{ color: "#6b6656", margin: 0 }}>
+                        {m.classe} · {m.annee_scolaire}
+                      </p>
+                      <p style={{ color: "#6b6656", margin: 0 }}>
+                        📞 {m.telephone} · ✉️ {m.email}
+                      </p>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                    <p style={{ fontFamily: "monospace", color: "var(--emerald)", fontWeight: 600, margin: 0 }}>
+                      {m.numero_membre}
+                    </p>
+                    <button
+                      className="btn btn-outline"
+                      disabled={enCours === m.id}
+                      onClick={() => supprimerMembre(m.id, `${m.prenom} ${m.nom}`)}
+                    >
+                      🗑️ Supprimer
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+    </main>
+  );
+}
