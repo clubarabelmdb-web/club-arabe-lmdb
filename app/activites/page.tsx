@@ -1,88 +1,156 @@
+import Link from "next/link";
+import GeometricPattern from "@/components/GeometricPattern";
 import { createClient } from "@/lib/supabaseClient";
 
-export const metadata = { title: "Activités — Club Arabe LMDB" };
 export const revalidate = 60;
 
-async function getActivites() {
+async function getDerniereActualite() {
   try {
     const supabase = createClient();
     const { data } = await supabase
-      .from("activites")
-      .select("*")
-      .order("date_activite", { ascending: true });
+      .from("actualites")
+      .select("titre, description, publie_le")
+      .order("publie_le", { ascending: false })
+      .limit(3);
     return data ?? [];
   } catch {
     return [];
   }
 }
 
-export default async function Activites() {
-  const activites = await getActivites();
-  const aujourdhui = new Date().toISOString().slice(0, 10);
-
-  const aVenir = activites.filter((a: any) => a.date_activite >= aujourdhui);
-  const passees = activites.filter((a: any) => a.date_activite < aujourdhui).reverse();
-
-  function CarteActivite({ a }: { a: any }) {
-    return (
-      <div className="card">
-        {a.affiche_url && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={a.affiche_url}
-            alt={a.titre}
-            style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", marginBottom: 16 }}
-          />
-        )}
-        <p style={{ fontSize: "0.85rem", color: "var(--gold)", marginBottom: 4 }}>
-          {new Date(a.date_activite).toLocaleDateString("fr-FR", {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-          })}
-          {a.heure ? ` · ${a.heure}` : ""}
-        </p>
-        <h2 style={{ fontSize: "1.25rem" }}>{a.titre}</h2>
-        {a.lieu && <p style={{ color: "#6b6656", margin: "0 0 8px" }}>📍 {a.lieu}</p>}
-        {a.description && <p style={{ color: "#4a463d" }}>{a.description}</p>}
-        {a.programme && (
-          <p style={{ color: "#4a463d", marginTop: 8 }}>
-            <strong>Programme :</strong> {a.programme}
-          </p>
-        )}
-      </div>
-    );
-  }
+export default async function Accueil() {
+  const actualites = await getDerniereActualite();
 
   return (
     <main>
+      {/* HERO */}
+      <section
+        style={{
+          background: "var(--emerald-deep)",
+          color: "var(--parchment)",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        <GeometricPattern
+          color="#c9a227"
+          opacity={0.18}
+          className="hero-pattern"
+        />
+        <div
+          className="container hero-grid"
+          style={{
+            position: "relative",
+            padding: "96px 24px 88px",
+          }}
+        >
+          <div>
+            <p className="eyebrow-line" style={{ color: "var(--gold-soft)" }}>
+              Lycée Maba Diakhou Ba
+            </p>
+            <h1 style={{ fontSize: "clamp(2.2rem, 5vw, 3.4rem)", maxWidth: "16ch" }}>
+              Le Club Arabe : langue, culture et savoir partagés
+            </h1>
+            <p style={{ color: "var(--gold-soft)", fontSize: "1.1rem", maxWidth: "48ch" }}>
+              Un espace dédié à la langue arabe, à la culture, à l'apprentissage,
+              au partage et aux activités éducatives et culturelles.
+            </p>
+            <div style={{ display: "flex", gap: 16, marginTop: 24, flexWrap: "wrap" }}>
+              <Link href="/inscription" className="btn btn-gold">
+                S'inscrire au club
+              </Link>
+              <Link
+                href="/a-propos"
+                className="btn"
+                style={{ border: "1.5px solid var(--parchment)", color: "var(--parchment)" }}
+              >
+                Découvrir le club
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* OBJECTIFS */}
       <section className="section">
         <div className="container">
-          <p className="eyebrow-line">Activités</p>
-          <h1 style={{ fontSize: "2rem" }}>Activités et événements du club</h1>
+          <p className="eyebrow-line">Ce que propose le club</p>
+          <h2 style={{ fontSize: "1.9rem", maxWidth: "30ch" }}>
+            Apprendre, débattre et célébrer la culture arabe ensemble
+          </h2>
+          <div
+            className="grid-3"
+            style={{ marginTop: 36 }}
+          >
+            {[
+              {
+                titre: "Apprentissage de l'arabe",
+                texte: "Cours, ateliers de langue et de calligraphie ouverts à tous les niveaux.",
+              },
+              {
+                titre: "Conférences & débats",
+                texte: "Rencontres, concours de récitation et discussions sur la culture arabe.",
+              },
+              {
+                titre: "Journées culturelles",
+                texte: "Événements et activités éducatives tout au long de l'année scolaire.",
+              },
+            ].map((item) => (
+              <div key={item.titre} className="card">
+                <h3 style={{ fontSize: "1.15rem", color: "var(--emerald-deep)" }}>{item.titre}</h3>
+                <p style={{ color: "#4a463d" }}>{item.texte}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-          <h2 style={{ fontSize: "1.3rem", marginTop: 32 }}>À venir</h2>
-          {aVenir.length === 0 ? (
-            <p style={{ color: "#6b6656" }}>Aucun événement à venir pour le moment.</p>
+      <hr className="divider" />
+
+      {/* ACTUALITÉS RÉCENTES */}
+      <section className="section">
+        <div className="container">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+            <div>
+              <p className="eyebrow-line">Dernières nouvelles</p>
+              <h2 style={{ fontSize: "1.9rem" }}>Actualités du club</h2>
+            </div>
+            <Link href="/actualites" style={{ color: "var(--emerald)", fontWeight: 600, textDecoration: "none" }}>
+              Voir tout
+            </Link>
+          </div>
+
+          {actualites.length === 0 ? (
+            <p style={{ color: "#6b6656", marginTop: 24 }}>
+              Aucune actualité publiée pour le moment. Revenez bientôt !
+            </p>
           ) : (
-            <div className="grid-3" style={{ marginTop: 16 }}>
-              {aVenir.map((a: any) => (
-                <CarteActivite key={a.id} a={a} />
+            <div className="grid-3" style={{ marginTop: 32 }}>
+              {actualites.map((a: any, i: number) => (
+                <div key={i} className="card">
+                  <h3 style={{ fontSize: "1.1rem" }}>{a.titre}</h3>
+                  <p style={{ color: "#4a463d" }}>{a.description?.slice(0, 110)}…</p>
+                </div>
               ))}
             </div>
           )}
+        </div>
+      </section>
 
-          {passees.length > 0 && (
-            <>
-              <h2 style={{ fontSize: "1.3rem", marginTop: 48 }}>Archives</h2>
-              <div className="grid-3" style={{ marginTop: 16 }}>
-                {passees.map((a: any) => (
-                  <CarteActivite key={a.id} a={a} />
-                ))}
-              </div>
-            </>
-          )}
+      {/* CTA FINAL */}
+      <section
+        className="section"
+        style={{ background: "var(--emerald-soft)", textAlign: "center" }}
+      >
+        <div className="container">
+          <h2 style={{ fontSize: "1.8rem" }}>Envie de rejoindre le Club Arabe ?</h2>
+          <p style={{ margin: "0 auto 24px", color: "#3d4d47" }}>
+            L'inscription ne prend que quelques minutes. Ta demande sera examinée
+            par l'administration du club avant validation.
+          </p>
+          <Link href="/inscription" className="btn btn-primary">
+            Remplir le formulaire d'inscription
+          </Link>
         </div>
       </section>
     </main>

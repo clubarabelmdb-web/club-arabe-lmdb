@@ -83,8 +83,16 @@ export default function Dashboard() {
 
   async function valider(id: string) {
     setEnCours(id);
-    const { error } = await supabase.rpc("valider_inscription", { inscription_id_param: id });
-    if (error) alert("Erreur : " + error.message);
+    const { error } = await supabase.rpc("valider_inscription", {
+      inscription_id_param: id,
+    });
+
+    if (error) {
+      alert("Erreur : " + error.message);
+      setEnCours(null);
+      return;
+    }
+
     await chargerDonnees();
     setEnCours(null);
   }
@@ -119,6 +127,7 @@ export default function Dashboard() {
   }
 
   const enAttente = inscriptions.filter((i) => i.statut === "en_attente");
+
   return (
     <main>
       <section className="section" style={{ paddingBottom: 24 }}>
@@ -126,7 +135,7 @@ export default function Dashboard() {
           <p className="eyebrow-line">Espace administrateur</p>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
             <h1 style={{ fontSize: "1.9rem", margin: 0 }}>Tableau de bord</h1>
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               <Link href="/admin/verification" className="btn btn-outline">
                 🪪 Vérifier une carte
               </Link>
@@ -302,7 +311,7 @@ export default function Dashboard() {
                     <button
                       className="btn btn-outline"
                       disabled={enCours === m.id}
-                      onClick={() =>supprimerMembre(m.id, `${m.prenom} ${m.nom}`)}
+                      onClick={() => supprimerMembre(m.id, `${m.prenom} ${m.nom}`)}
                     >
                       🗑️ Supprimer
                     </button>
@@ -313,6 +322,6 @@ export default function Dashboard() {
           )}
         </div>
       </section>
-    </main> 
+    </main>
   );
-} 
+}

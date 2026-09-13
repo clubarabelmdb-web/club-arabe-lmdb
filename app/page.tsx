@@ -57,7 +57,7 @@ export default function EspaceMembre() {
       const { data: notifs } = await supabase
         .from("notifications")
         .select("*")
-        .eq("membre_id", (m as any).id)
+        .eq("membre_id", (m as { id: string }).id)
         .order("cree_le", { ascending: false });
       setNotifications((notifs as Notification[]) ?? []);
     }
@@ -128,7 +128,9 @@ export default function EspaceMembre() {
         </section>
       </main>
     );
-  }  if (!membre) {
+  }
+
+  if (!membre) {
     return (
       <main className="container section">
         <p style={{ color: "#6b6656" }}>
@@ -139,9 +141,8 @@ export default function EspaceMembre() {
           Se déconnecter
         </button>
       </main>
-    );
+    ); 
   }
-
   return (
     <main>
       <section className="section">
