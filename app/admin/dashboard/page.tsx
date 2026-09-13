@@ -119,7 +119,7 @@ export default function Dashboard() {
   }
 
   const enAttente = inscriptions.filter((i) => i.statut === "en_attente");
-}  return (
+  return (
     <main>
       <section className="section" style={{ paddingBottom: 24 }}>
         <div className="container">
@@ -315,4 +315,4 @@ export default function Dashboard() {
       </section>
     </main> 
   );
-}
+} 
