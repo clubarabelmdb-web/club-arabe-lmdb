@@ -83,33 +83,8 @@ export default function Dashboard() {
 
   async function valider(id: string) {
     setEnCours(id);
-    const { data: nouveauMembre, error } = await supabase.rpc("valider_inscription", {
-      inscription_id_param: id,
-    });
-    if (error) {
-      alert("Erreur : " + error.message);
-      setEnCours(null);
-      return;
-    }
-
-    // Crée automatiquement le compte du membre et lui envoie l'invitation
-    try {
-      const reponse = await fetch("/api/inviter-membre", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ membreId: nouveauMembre.id }),
-      });
-      if (!reponse.ok) {
-        const { error: erreurInvitation } = await reponse.json();
-        alert(
-          "Le membre a été validé, mais l'envoi de l'invitation a échoué : " +
-            erreurInvitation
-        );
-      }
-    } catch {
-      alert("Le membre a été validé, mais l'envoi de l'invitation a échoué.");
-    }
-
+    const { error } = await supabase.rpc("valider_inscription", { inscription_id_param: id });
+    if (error) alert("Erreur : " + error.message);
     await chargerDonnees();
     setEnCours(null);
   }
@@ -143,7 +118,8 @@ export default function Dashboard() {
     );
   }
 
-  const enAttente = inscriptions.filter((i) => i.statut === "en_attente");  return (
+  const enAttente = inscriptions.filter((i) => i.statut === "en_attente");
+}  return (
     <main>
       <section className="section" style={{ paddingBottom: 24 }}>
         <div className="container">
@@ -326,7 +302,7 @@ export default function Dashboard() {
                     <button
                       className="btn btn-outline"
                       disabled={enCours === m.id}
-                      onClick={() => supprimerMembre(m.id, `${m.prenom} ${m.nom}`)}
+                      onClick={() =>supprimerMembre(m.id, `${m.prenom} ${m.nom}`)}
                     >
                       🗑️ Supprimer
                     </button>
@@ -337,6 +313,6 @@ export default function Dashboard() {
           )}
         </div>
       </section>
-    </main>
+    </main> 
   );
 }
