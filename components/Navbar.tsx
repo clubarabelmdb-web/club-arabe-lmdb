@@ -59,9 +59,7 @@ export default function Navbar() {
           <Link href="/inscription" className="btn btn-primary" style={{ padding: "10px 20px" }}>
             S'inscrire
           </Link>
-          <Link href="/membre" className="btn btn-outline" style={{ padding: "10px 18px" }}>
-            Se connecter
-          </Link>
+          
         </nav>
       </div>
     </header>
