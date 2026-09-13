@@ -1,251 +1,149 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { QRCodeSVG } from "qrcode.react";
+import GeometricPattern from "@/components/GeometricPattern";
 import { createClient } from "@/lib/supabaseClient";
 
-type Membre = {
-  numero_membre: string;
-  prenom: string;
-  nom: string;
-  classe: string;
-  annee_scolaire: string;
-  statut: string;
-  photo_url: string | null;
-};
+export const revalidate = 60;
 
-type Notification = {
-  id: string;
-  titre: string;
-  message: string;
-  cree_le: string;
-  lue: boolean;
-};
-
-export default function EspaceMembre() {
-  const supabase = createClient();
-  const [connecte, setConnecte] = useState(false);
-  const [chargement, setChargement] = useState(true);
-  const [membre, setMembre] = useState<Membre | null>(null);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [erreur, setErreur] = useState("");
-
-  useEffect(() => {
-    verifier();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  async function verifier() {
-    const { data } = await supabase.auth.getUser();
-    if (data.user) {
-      await chargerProfil(data.user.id);
-      setConnecte(true);
-    }
-    setChargement(false);
+async function getDerniereActualite() {
+  try {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("actualites")
+      .select("titre, description, publie_le")
+      .order("publie_le", { ascending: false })
+      .limit(3);
+    return data ?? [];
+  } catch {
+    return [];
   }
+}
 
-  async function chargerProfil(userId: string) {
-    const { data: m } = await supabase
-      .from("membres")
-      .select("numero_membre, prenom, nom, classe, annee_scolaire, statut, photo_url, id")
-      .eq("user_id", userId)
-      .maybeSingle();
+export default async function Accueil() {
+  const actualites = await getDerniereActualite();
 
-    if (m) {
-      setMembre(m as Membre);
-      const { data: notifs } = await supabase
-        .from("notifications")
-        .select("*")
-        .eq("membre_id", (m as { id: string }).id)
-        .order("cree_le", { ascending: false });
-      setNotifications((notifs as Notification[]) ?? []);
-    }
-  }
-
-  async function connexion(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setErreur("");
-    const formData = new FormData(e.currentTarget);
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: formData.get("email") as string,
-      password: formData.get("password") as string,
-    });
-    if (error || !data.user) {
-      setErreur("E-mail ou mot de passe incorrect.");
-      return;
-    }
-    await chargerProfil(data.user.id);
-    setConnecte(true);
-  }
-
-  async function deconnexion() {
-    await supabase.auth.signOut();
-    setConnecte(false);
-    setMembre(null);
-  }
-
-  if (chargement) {
-    return (
-      <main className="container section">
-        <p>Chargement...</p>
-      </main>
-    );
-  }
-
-  if (!connecte) {
-    return (
-      <main>
-        <section className="section" style={{ maxWidth: 420, margin: "0 auto" }}>
-          <div className="container">
-            <p className="eyebrow-line">Espace membre</p>
-            <h1 style={{ fontSize: "1.7rem" }}>Connexion</h1>
-            <p style={{ color: "#6b6656" }}>
-              Un compte est créé automatiquement dès que ton inscription est
-              validée. Utilise l'e-mail fourni lors de l'inscription.
-            </p>
-            <form onSubmit={connexion}>
-              <div className="field">
-                <label htmlFor="email">E-mail</label>
-                <input id="email" name="email" type="email" required />
-              </div>
-              <div className="field">
-                <label htmlFor="password">Mot de passe</label>
-                <input id="password" name="password" type="password" required />
-              </div>
-              {erreur && <p style={{ color: "#8a2d2d", marginBottom: 16 }}>{erreur}</p>}
-              <button type="submit" className="btn btn-primary">
-                Se connecter
-              </button>
-            </form>
-            <p style={{ marginTop: 16, fontSize: "0.9rem", color: "#6b6656" }}>
-              Pas encore de compte ?{" "}
-              <Link href="/membre/creer-compte" style={{ color: "var(--emerald)" }}>
-                Créer mon compte
-              </Link>
-            </p>
-          </div>
-        </section>
-      </main>
-    );
-  }
-
-  if (!membre) {
-    return (
-      <main className="container section">
-        <p style={{ color: "#6b6656" }}>
-          Aucune fiche membre n'est encore associée à ce compte. Contacte
-          l'administration du club.
-        </p>
-        <button className="btn btn-outline" onClick={deconnexion}>
-          Se déconnecter
-        </button>
-      </main>
-    ); 
-  }
   return (
     <main>
+      <section
+        style={{
+          background: "var(--emerald-deep)",
+          color: "var(--parchment)",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        <GeometricPattern
+          color="#c9a227"
+          opacity={0.18}
+          className="hero-pattern"
+        />
+        <div
+          className="container hero-grid"
+          style={{
+            position: "relative",
+            padding: "96px 24px 88px",
+          }}
+        >
+          <div>
+            <p className="eyebrow-line" style={{ color: "var(--gold-soft)" }}>
+              Lycée Maba Diakhou Ba
+            </p>
+            <h1 style={{ fontSize: "clamp(2.2rem, 5vw, 3.4rem)", maxWidth: "16ch" }}>
+              Le Club Arabe : langue, culture et savoir partagés
+            </h1>
+            <p style={{ color: "var(--gold-soft)", fontSize: "1.1rem", maxWidth: "48ch" }}>
+              Un espace dédié à la langue arabe, à la culture, à l'apprentissage,
+              au partage et aux activités éducatives et culturelles.
+            </p>
+            <div style={{ display: "flex", gap: 16, marginTop: 24, flexWrap: "wrap" }}>
+              <Link href="/inscription" className="btn btn-gold">
+                S'inscrire au club
+              </Link>
+              <Link
+                href="/a-propos"
+                className="btn"
+                style={{ border: "1.5px solid var(--parchment)", color: "var(--parchment)" }}
+              >
+                Découvrir le club
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="section">
         <div className="container">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>
-              <p className="eyebrow-line">Espace membre</p>
-              <h1 style={{ fontSize: "1.9rem" }}>
-                Bonjour {membre.prenom} !
-              </h1>
-            </div>
-            <button className="btn btn-outline" onClick={deconnexion}>
-              Se déconnecter
-            </button>
-          </div>
-
-          <div className="grid-2" style={{ marginTop: 32, alignItems: "start" }}>
-            {/* CARTE DE MEMBRE */}
-            <div
-              className="card"
-              style={{
-                background: "var(--emerald-deep)",
-                color: "var(--parchment)",
-                borderColor: "var(--emerald-deep)",
-              }}
-            >
-              <p style={{ color: "var(--gold-soft)", fontWeight: 700, letterSpacing: "0.04em", marginBottom: 2 }}>
-                CLUB ARABE
-              </p>
-              <p style={{ color: "var(--gold-soft)", fontSize: "0.85rem", marginBottom: 20 }}>
-                Lycée Maba Diakhou Ba
-              </p>
-
-              <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
-                {membre.photo_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={membre.photo_url}
-                    alt={`${membre.prenom} ${membre.nom}`}
-                    style={{
-                      width: 72,
-                      height: 72,
-                      borderRadius: "50%",
-                      objectFit: "cover",
-                      border: "2px solid var(--gold-soft)",
-                      flexShrink: 0,
-                    }}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      width: 72,
-                      height: 72,
-                      borderRadius: "50%",
-                      background: "var(--gold-soft)",
-                      color: "var(--emerald-deep)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontWeight: 700,
-                      fontSize: "1.3rem",
-                      flexShrink: 0,
-                    }}
-                  >
-                    {membre.prenom[0]}
-                    {membre.nom[0]}
-                  </div>
-                )}
-                <div style={{ background: "#fff", padding: 8, display: "inline-block" }}>
-                  <QRCodeSVG value={membre.numero_membre} size={92} />
-                </div>
-                <div>
-                  <p style={{ margin: 0, fontSize: "1.15rem", fontWeight: 700 }}>
-                    {membre.prenom} {membre.nom}
-                  </p>
-                  <p style={{ margin: 0, color: "var(--gold-soft)" }}>{membre.classe}</p>
-                  <p style={{ margin: "8px 0 0", fontFamily: "monospace", fontSize: "1rem" }}>
-                    {membre.numero_membre}
-                  </p>
-                  <p style={{ margin: "8px 0 0", fontSize: "0.85rem", color: "var(--gold-soft)" }}>
-                    Année {membre.annee_scolaire} · Statut : {membre.statut === "actif" ? "Membre actif" : "Inactif"}
-                  </p>
-                </div>
+          <p className="eyebrow-line">Ce que propose le club</p>
+          <h2 style={{ fontSize: "1.9rem", maxWidth: "30ch" }}>
+            Apprendre, débattre et célébrer la culture arabe ensemble
+          </h2>
+          <div className="grid-3" style={{ marginTop: 36 }}>
+            {[
+              {
+                titre: "Apprentissage de l'arabe",
+                texte: "Cours, ateliers de langue et de calligraphie ouverts à tous les niveaux.",
+              },
+              {
+                titre: "Conférences & débats",
+                texte: "Rencontres, concours de récitation et discussions sur la culture arabe.",
+              },
+              {
+                titre: "Journées culturelles",
+                texte: "Événements et activités éducatives tout au long de l'année scolaire.",
+              },
+            ].map((item) => (
+              <div key={item.titre} className="card">
+                <h3 style={{ fontSize: "1.15rem", color: "var(--emerald-deep)" }}>{item.titre}</h3>
+                <p style={{ color: "#4a463d" }}>{item.texte}</p>
               </div>
-            </div>
-
-            {/* NOTIFICATIONS */}
-            <div>
-              <h2 style={{ fontSize: "1.2rem" }}>Notifications</h2>
-              {notifications.length === 0 ? (
-                <p style={{ color: "#6b6656" }}>Aucune notification pour le moment.</p>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  {notifications.map((n) => (
-                    <div key={n.id} className="card">
-                      <p style={{ fontWeight: 600, margin: 0 }}>{n.titre}</p>
-                      <p style={{ color: "#4a463d", margin: 0 }}>{n.message}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            ))}
           </div>
+        </div>
+      </section>
+
+      <hr className="divider" />
+
+      <section className="section">
+        <div className="container">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+            <div>
+              <p className="eyebrow-line">Dernières nouvelles</p>
+              <h2 style={{ fontSize: "1.9rem" }}>Actualités du club</h2>
+            </div>
+            <Link href="/actualites" style={{ color: "var(--emerald)", fontWeight: 600, textDecoration: "none" }}>
+              Voir tout
+            </Link>
+          </div>
+
+          {actualites.length === 0 ? (
+            <p style={{ color: "#6b6656", marginTop: 24 }}>
+              Aucune actualité publiée pour le moment. Revenez bientôt !
+            </p>
+          ) : (
+            <div className="grid-3" style={{ marginTop: 32 }}>
+              {actualites.map((a: any, i: number) => (
+                <div key={i} className="card">
+                  <h3 style={{ fontSize: "1.1rem" }}>{a.titre}</h3>
+                  <p style={{ color: "#4a463d" }}>{a.description?.slice(0, 110)}…</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section
+        className="section"
+        style={{ background: "var(--emerald-soft)", textAlign: "center" }}
+      >
+        <div className="container">
+          <h2 style={{ fontSize: "1.8rem" }}>Envie de rejoindre le Club Arabe ?</h2>
+          <p style={{ margin: "0 auto 24px", color: "#3d4d47" }}>
+            L'inscription ne prend que quelques minutes. Ta demande sera examinée
+            par l'administration du club avant validation.
+          </p>
+          <Link href="/inscription" className="btn btn-primary">
+            Remplir le formulaire d'inscription
+          </Link>
         </div>
       </section>
     </main>
