@@ -9,7 +9,6 @@ export default function CreerCompte() {
   const router = useRouter();
   const supabase = createClient();
 
-  const [numeroMembre, setNumeroMembre] = useState("");
   const [email, setEmail] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
   const [erreur, setErreur] = useState("");
@@ -39,9 +38,8 @@ export default function CreerCompte() {
       return;
     }
 
-    // 2. Lie ce compte à la fiche membre correspondante
-    const { error: lienError } = await supabase.rpc("lier_compte_membre", {
-      numero_membre_param: numeroMembre.trim().toUpperCase(),
+    // 2. Lie ce compte à la fiche membre correspondante (retrouvée par e-mail)
+    const { error: lienError } = await supabase.rpc("lier_compte_membre_par_email", {
       email_param: email.trim(),
     });
 
@@ -74,20 +72,10 @@ export default function CreerCompte() {
           <p className="eyebrow-line">Espace membre</p>
           <h1 style={{ fontSize: "1.7rem" }}>Créer mon compte</h1>
           <p style={{ color: "#6b6656" }}>
-            Renseigne les mêmes informations que lors de ton inscription pour
-            créer ton compte de connexion.
+            Utilise le même e-mail que lors de ton inscription pour créer ton
+            compte de connexion.
           </p>
           <form onSubmit={handleSubmit}>
-            <div className="field">
-              <label htmlFor="numero">Numéro de membre</label>
-              <input
-                id="numero"
-                value={numeroMembre}
-                onChange={(e) => setNumeroMembre(e.target.value)}
-                placeholder="CA-LMDB-0001"
-                required
-              />
-            </div>
             <div className="field">
               <label htmlFor="email">E-mail (le même que lors de l'inscription)</label>
               <input
