@@ -300,3 +300,19 @@ button {
     scroll-behavior: auto !important;
   }
 }
+/* ============================================================
+   MENU MOBILE (NAVBAR)
+   ============================================================ */
+
+.navbar-toggle {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .navbar-desktop-links {
+    display: none !important;
+  }
+  .navbar-toggle {
+    display: block !important;
+  }
+}
