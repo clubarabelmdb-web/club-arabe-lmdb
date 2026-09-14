@@ -105,6 +105,32 @@ export default function Dashboard() {
     setTimeout(() => setCopie(null), 2000);
   }
 
+  function exporterCSV() {
+    const entetes = ["Numero", "Prenom", "Nom", "Classe", "Telephone", "Email", "Annee scolaire", "Statut"];
+    const lignes = membres.map((m) => [
+      m.numero_membre,
+      m.prenom,
+      m.nom,
+      m.classe,
+      m.telephone,
+      m.email,
+      m.annee_scolaire,
+      m.statut,
+    ]);
+    const csv = [entetes, ...lignes]
+      .map((ligne) => ligne.map((champ) => `"${String(champ).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const lien = document.createElement("a");
+    lien.href = url;
+    lien.download = `membres-club-arabe-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(lien);
+    lien.click();
+    document.body.removeChild(lien);
+    URL.revokeObjectURL(url);
+  }
+
   async function supprimerMembre(id: string, nomComplet: string) {
     const confirmation = window.confirm(
       `Supprimer définitivement ${nomComplet} ? Cette action est irréversible.`
@@ -262,7 +288,13 @@ export default function Dashboard() {
           ) : membres.length === 0 ? (
             <p style={{ color: "#6b6656" }}>Aucun membre pour le moment.</p>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <>
+              <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
+                <button className="btn btn-outline" onClick={exporterCSV}>
+                  ⬇️ Exporter en CSV
+                </button>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {membres.map((m) => (
                 <div key={m.id} className="card" style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
                   <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
@@ -324,7 +356,8 @@ export default function Dashboard() {
                   </div>
                 </div>
               ))}
-            </div>
+              </div>
+            </>
           )}
         </div>
       </section>
