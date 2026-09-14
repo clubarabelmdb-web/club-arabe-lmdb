@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 const links = [
   { href: "/", label: "Accueil" },
@@ -32,6 +33,9 @@ export default function Navbar() {
         <Link
           href="/"
           style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
             fontFamily: "var(--font-display)",
             fontSize: "1.25rem",
             fontWeight: 700,
@@ -39,6 +43,14 @@ export default function Navbar() {
             textDecoration: "none",
           }}
         >
+          <Image
+            src="/images/logo.png"
+            alt="Logo du Club Arabe"
+            width={44}
+            height={44}
+            style={{ borderRadius: "50%" }}
+            priority
+          />
           Club Arabe <span style={{ color: "var(--gold)" }}>· LMDB</span>
         </Link>
 
@@ -59,7 +71,6 @@ export default function Navbar() {
           <Link href="/inscription" className="btn btn-primary" style={{ padding: "10px 20px" }}>
             S'inscrire
           </Link>
-          
         </nav>
       </div>
     </header>
