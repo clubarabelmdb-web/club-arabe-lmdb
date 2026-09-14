@@ -40,6 +40,7 @@ export default function Dashboard() {
   const [membres, setMembres] = useState<Membre[]>([]);
   const [onglet, setOnglet] = useState<"demandes" | "membres">("demandes");
   const [enCours, setEnCours] = useState<string | null>(null);
+  const [copie, setCopie] = useState<string | null>(null);
 
   useEffect(() => {
     verifierAccesEtCharger();
@@ -83,16 +84,8 @@ export default function Dashboard() {
 
   async function valider(id: string) {
     setEnCours(id);
-    const { error } = await supabase.rpc("valider_inscription", {
-      inscription_id_param: id,
-    });
-
-    if (error) {
-      alert("Erreur : " + error.message);
-      setEnCours(null);
-      return;
-    }
-
+    const { error } = await supabase.rpc("valider_inscription", { inscription_id_param: id });
+    if (error) alert("Erreur : " + error.message);
     await chargerDonnees();
     setEnCours(null);
   }
@@ -103,6 +96,13 @@ export default function Dashboard() {
     if (error) alert("Erreur : " + error.message);
     await chargerDonnees();
     setEnCours(null);
+  }
+
+  async function copierMessage(m: Membre) {
+    const message = `Salam alaykoum ${m.prenom},\n\nTon inscription au Club Arabe LMDB est officiellement validée ! 🎉\nNuméro de membre : ${m.numero_membre}\n\nProchaine étape : rejoins notre groupe WhatsApp du club pour ne rien manquer, et jette un œil aux prochaines activités sur le site : club-arabe-lmdb.vercel.app/activites\n\nAu plaisir de te voir bientôt !`;
+    await navigator.clipboard.writeText(message);
+    setCopie(m.id);
+    setTimeout(() => setCopie(null), 2000);
   }
 
   async function supprimerMembre(id: string, nomComplet: string) {
@@ -135,7 +135,7 @@ export default function Dashboard() {
           <p className="eyebrow-line">Espace administrateur</p>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
             <h1 style={{ fontSize: "1.9rem", margin: 0 }}>Tableau de bord</h1>
-                            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               <Link href="/admin/verification" className="btn btn-outline">
                 🪪 Vérifier une carte
               </Link>
@@ -308,6 +308,12 @@ export default function Dashboard() {
                     <p style={{ fontFamily: "monospace", color: "var(--emerald)", fontWeight: 600, margin: 0 }}>
                       {m.numero_membre}
                     </p>
+                    <button
+                      className="btn btn-gold"
+                      onClick={() => copierMessage(m)}
+                    >
+                      {copie === m.id ? "✅ Copié !" : "📋 Copier le message"}
+                    </button>
                     <button
                       className="btn btn-outline"
                       disabled={enCours === m.id}
