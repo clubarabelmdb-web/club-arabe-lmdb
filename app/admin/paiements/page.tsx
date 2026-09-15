@@ -188,7 +188,7 @@ export default function Paiements() {
       </head>
       <body>
         <div class="entete">
-          <img          <img src="${logoUrl}" alt="Logo Club Arabe" /> " alt="Logo Club Arabe" />
+            <img src="${logoUrl}" alt="Logo Club Arabe" />
           <div>
             <h1>CLUB ARABE</h1>
             <p>Lycée Maba Diakhou Ba</p>
