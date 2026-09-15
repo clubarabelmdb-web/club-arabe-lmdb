@@ -140,8 +140,8 @@ export default function Paiements() {
       month: "long",
       year: "numeric",
     });
-    const numeroRecu = p.id.slice(0, 8).toUpperCase();
-
+        const numeroRecu = p.id.slice(0, 8).toUpperCase();
+    const logoUrl = `${window.location.origin}/images/logo.png`;
     const fenetre = window.open("", "_blank");
     if (!fenetre) {
       alert("Ton navigateur a bloqué l'ouverture de la fenêtre. Autorise les pop-ups pour ce site.");
@@ -188,7 +188,7 @@ export default function Paiements() {
       </head>
       <body>
         <div class="entete">
-          <img src="/images/logo.png" alt="Logo Club Arabe" />
+          <img          <img src="${logoUrl}" alt="Logo Club Arabe" /> " alt="Logo Club Arabe" />
           <div>
             <h1>CLUB ARABE</h1>
             <p>Lycée Maba Diakhou Ba</p>
