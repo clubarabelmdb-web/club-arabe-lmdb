@@ -99,7 +99,7 @@ export default function Dashboard() {
   }
 
   async function copierMessage(m: Membre) {
-    const message = `Salam alaykoum ${m.prenom},\n\nTon inscription au Club Arabe LMDB est officiellement validée ! 🎉\nNuméro de membre : ${m.numero_membre}\n\nProchaine étape : rejoins notre groupe WhatsApp du club pour ne rien manquer, et jette un œil aux prochaines activités sur le site : club-arabe-lmdb.vercel.app/activites\n\nAu plaisir de te voir bientôt !`;
+    const message = `Salam alaykoum ${m.prenom},\n\nTon inscription au Club Arabe LMDB est officiellement validée ! 🎉\nNuméro de membre : ${m.numero_membre}\n\nProchaine étape : rejoins notre groupe WhatsApp du club pour ne rien manquerUtilise ce lien pour intégrer mon groupe WhatsApp : https://chat.whatsapp.com/DSuk1LcsinpA2dQe6Pu0aJ?s=sw&p=a&mlu=4&ilr=4, et jette un œil aux prochaines activités sur le site : club-arabe-lmdb.vercel.app/activites\n\nAu plaisir de te voir bientôt !`;
     await navigator.clipboard.writeText(message);
     setCopie(m.id);
     setTimeout(() => setCopie(null), 2000);
