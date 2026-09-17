@@ -157,12 +157,25 @@ export default function InfosPaiementAdmin() {
                 placeholder="ex : Envoie une capture du reçu au bureau après paiement."
               />
             </div>
-            <button type="submit" className="btn btn-primary" disabled={enregistrement}>
-              {enregistrement ? "Enregistrement..." : "Enregistrer"}
-            </button>
-            {enregistre && (
-              <span style={{ marginLeft: 12, color: "var(--emerald)" }}>✅ Enregistré</span>
-            )}
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <button type="submit" className="btn btn-primary" disabled={enregistrement}>
+                {enregistrement ? "Enregistrement..." : "Enregistrer"}
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={() => {
+                  setNomTresorier("");
+                  setWaveNumero("");
+                  setOrangeMoneyNumero("");
+                  setMontantCotisation("");
+                  setInstructions("");
+                }}
+              >
+                🗑️ Vider les champs
+              </button>
+              {enregistre && <span style={{ color: "var(--emerald)" }}>✅ Enregistré</span>}
+            </div>
           </form>
         </div>
       </section>
