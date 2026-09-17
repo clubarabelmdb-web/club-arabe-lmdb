@@ -1,13 +1,28 @@
+/* ============================================================
+   DESIGN SYSTEM — CLUB ARABE LMDB
+   ============================================================ */
+
 :root {
-  --ink: #1f2933;
-  --parchment: #f8f7f2;
-  --parchment-warm: #f1eee3;
-  --emerald: #198754;
-  --emerald-deep: #0f5132;
-  --emerald-soft: #eef5f0;
-  --gold: #c9a227;
-  --gold-soft: #e3cd7e;
-  --line: #dce3d7;
+  /* Couleurs */
+  --ink: #17201e;
+  --ink-muted: #64746d;
+  --parchment: #fcfaf4;
+  --parchment-warm: #f5f1e6;
+  --emerald: #087f5b;
+  --emerald-light: #10b981;
+  --emerald-deep: #064e3b;
+  --emerald-soft: #f0f8f4;
+  --gold: #d4af6a;
+  --gold-soft: #f0d9a0;
+  --line: #dde8e2;
+  --white: #ffffff;
+
+  /* Échelle */
+  --radius-sm: 4px;
+  --radius-md: 10px;
+  --radius-lg: 18px;
+  --shadow-soft: 0 10px 24px rgba(6, 78, 59, 0.08);
+  --shadow-hover: 0 16px 32px rgba(6, 78, 59, 0.14);
   --max-width: 1120px;
 }
 
@@ -24,7 +39,7 @@ body {
   background: var(--parchment);
   color: var(--ink);
   font-family: var(--font-body), "Segoe UI", sans-serif;
-  line-height: 1.55;
+  line-height: 1.6;
 }
 
 h1, h2, h3, h4 {
@@ -33,11 +48,13 @@ h1, h2, h3, h4 {
   line-height: 1.15;
   margin: 0 0 0.5em 0;
   letter-spacing: 0.01em;
+  color: var(--emerald-deep);
 }
 
 p {
   margin: 0 0 1em 0;
   max-width: 68ch;
+  color: var(--ink);
 }
 
 a {
@@ -67,8 +84,13 @@ button {
   padding: 40px 0;
 }
 
+/* ============================================================
+   SÉPARATEURS
+   ============================================================ */
+
 .divider {
   height: 1px;
+  position: relative;
   background: repeating-linear-gradient(
     90deg,
     var(--line) 0px,
@@ -79,16 +101,26 @@ button {
   border: none;
   margin: 0;
 }
+.divider::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 9px;
+  height: 9px;
+  background: var(--gold);
+  transform: translate(-50%, -50%) rotate(45deg);
+}
 
 .eyebrow-line {
   display: flex;
   align-items: center;
   gap: 12px;
   color: var(--emerald);
+  font-weight: 600;
   font-size: 0.95rem;
   margin-bottom: 8px;
 }
-
 .eyebrow-line::before {
   content: "";
   width: 22px;
@@ -97,23 +129,34 @@ button {
   display: inline-block;
 }
 
+/* ============================================================
+   BOUTONS
+   ============================================================ */
+
 .btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 13px 26px;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   font-size: 1rem;
   font-weight: 600;
   text-decoration: none;
   border: 1.5px solid transparent;
   cursor: pointer;
-  transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+  transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease,
+    box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.btn:hover {
+  transform: translateY(-1px);
+}
+.btn:active {
+  transform: translateY(0);
 }
 
 .btn-primary {
   background: var(--emerald);
-  color: var(--parchment);
+  color: var(--white);
 }
 .btn-primary:hover {
   background: var(--emerald-deep);
@@ -122,11 +165,11 @@ button {
 .btn-outline {
   background: transparent;
   border-color: var(--emerald);
-  color: var(--emerald);
+  color: var(--emerald-deep);
 }
 .btn-outline:hover {
   background: var(--emerald);
-  color: var(--parchment);
+  color: var(--white);
 }
 
 .btn-gold {
@@ -136,6 +179,10 @@ button {
 .btn-gold:hover {
   background: var(--gold-soft);
 }
+
+/* ============================================================
+   FORMULAIRES
+   ============================================================ */
 
 .field {
   display: flex;
@@ -151,224 +198,3 @@ button {
 }
 
 .field input,
-.field select,
-.field textarea {
-  font-family: inherit;
-  font-size: 1rem;
-  padding: 11px 14px;
-  border: 1.5px solid var(--line);
-  border-radius: 3px;
-  background: #fff;
-  color: var(--ink);
-}
-
-.field input:focus,
-.field select:focus,
-.field textarea:focus {
-  outline: 2px solid var(--gold);
-  outline-offset: 1px;
-  border-color: var(--emerald);
-}
-
-.card {
-  border: 1px solid var(--line);
-  padding: 24px;
-  background: #fff;
-}
-
-.hero-pattern {
-  position: absolute;
-  top: 0;
-  right: 0;
-  height: 100%;
-  width: 55%;
-  pointer-events: none;
-}
-
-.hero-grid {
-  display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
-  gap: 40px;
-  align-items: end;
-}
-
-.grid-3 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-}
-
-.grid-2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-}
-
-.grid-4 {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
-}
-
-@media (max-width: 900px) {
-  .hero-grid,
-  .grid-3,
-  .grid-2 {
-    grid-template-columns: 1fr;
-  }
-  .grid-4 {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 480px) {
-  .grid-4 {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 720px) {
-  .section {
-    padding: 48px 0;
-  }
-  .hero-pattern {
-    width: 100%;
-    opacity: 0.1 !important;
-  }
-}
-
-/* ============================================================
-   ANIMATIONS DISCRÈTES
-   ============================================================ */
-
-@keyframes fade-in-up {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Le contenu du hero apparaît en douceur au chargement de la page */
-.hero-grid > div {
-  animation: fade-in-up 0.7s ease-out both;
-}
-
-/* Les cartes se soulèvent légèrement au survol */
-.card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-}
-.card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 24px rgba(15, 81, 50, 0.1);
-  border-color: var(--emerald);
-}
-
-/* Les boutons réagissent légèrement au clic */
-.btn {
-  transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease,
-    box-shadow 0.15s ease;
-}
-.btn:hover {
-  transform: translateY(-1px);
-}
-.btn:active {
-  transform: translateY(0);
-}
-
-/* Léger zoom sur les photos de galerie au survol */
-.grid-4 > div {
-  overflow: hidden;
-  position: relative;
-}
-.grid-4 img {
-  transition: transform 0.35s ease;
-}
-.grid-4 img:hover {
-  transform: scale(1.05);
-}
-
-/* Respecte les personnes sensibles aux animations */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-/* ============================================================
-   MENU MOBILE (NAVBAR)
-   ============================================================ */
-
-.navbar-toggle {
-  display: none;
-}
-
-@media (max-width: 860px) {
-  .navbar-desktop-links {
-    display: none !important;
-  }
-  .navbar-toggle {
-    display: block !important;
-  }
-}
-/* ============================================================
-   TOUCHES PREMIUM (CSS uniquement)
-   ============================================================ */
-
-/* Barre de défilement personnalisée */
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-::-webkit-scrollbar-track {
-  background: var(--parchment);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--emerald);
-  border-radius: 6px;
-  border: 2px solid var(--parchment);
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--emerald-deep);
-}
-html {
-  scrollbar-color: var(--emerald) var(--parchment);
-  scrollbar-width: thin;
-}
-
-/* Couleur de sélection de texte */
-::selection {
-  background: var(--gold);
-  color: var(--emerald-deep);
-}
-
-/* Focus clavier plus soigné (accessibilité) */
-a:focus-visible,
-button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  outline: 2px solid var(--gold);
-  outline-offset: 3px;
-  border-radius: 2px;
-}
-
-/* Petit losange doré au centre des séparateurs */
-.divider {
-  position: relative;
-}
-.divider::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 9px;
-  height: 9px;
-  background: var(--gold);
-  transform: translate(-50%, -50%) rotate(45deg);
-}
