@@ -316,3 +316,59 @@ button {
     display: block !important;
   }
 }
+/* ============================================================
+   TOUCHES PREMIUM (CSS uniquement)
+   ============================================================ */
+
+/* Barre de défilement personnalisée */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--parchment);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--emerald);
+  border-radius: 6px;
+  border: 2px solid var(--parchment);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--emerald-deep);
+}
+html {
+  scrollbar-color: var(--emerald) var(--parchment);
+  scrollbar-width: thin;
+}
+
+/* Couleur de sélection de texte */
+::selection {
+  background: var(--gold);
+  color: var(--emerald-deep);
+}
+
+/* Focus clavier plus soigné (accessibilité) */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Petit losange doré au centre des séparateurs */
+.divider {
+  position: relative;
+}
+.divider::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 9px;
+  height: 9px;
+  background: var(--gold);
+  transform: translate(-50%, -50%) rotate(45deg);
+}
