@@ -79,6 +79,9 @@ export default function Navbar() {
           <Link href="/inscription" className="btn btn-primary" style={{ padding: "10px 20px" }}>
             S'inscrire
           </Link>
+          <Link href="/membre" className="btn btn-outline" style={{ padding: "10px 18px" }}>
+            Se connecter
+          </Link>
         </nav>
 
         {/* Bouton hamburger (mobile uniquement) */}
@@ -135,6 +138,14 @@ export default function Navbar() {
             style={{ marginTop: 16, textAlign: "center" }}
           >
             S'inscrire
+          </Link>
+          <Link
+            href="/membre"
+            onClick={() => setMenuOuvert(false)}
+            className="btn btn-outline"
+            style={{ marginTop: 8, textAlign: "center" }}
+          >
+            Se connecter
           </Link>
         </nav>
       )}
