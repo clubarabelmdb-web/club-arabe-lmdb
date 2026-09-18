@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 import { createClient } from "@/lib/supabaseClient";
+import { demanderPermissionEtObtenirJeton } from "@/lib/firebaseClient";
 
 type Membre = {
+  id: string;
   numero_membre: string;
   prenom: string;
   nom: string;
@@ -21,6 +23,9 @@ export default function EspaceMembre() {
   const [chargement, setChargement] = useState(true);
   const [membre, setMembre] = useState<Membre | null>(null);
   const [erreur, setErreur] = useState("");
+  const [notifStatut, setNotifStatut] = useState<"inactif" | "en_cours" | "actif" | "erreur">(
+    "inactif"
+  );
 
   useEffect(() => {
     verifier();
@@ -39,10 +44,29 @@ export default function EspaceMembre() {
   async function chargerProfil(userId: string) {
     const { data: m } = await supabase
       .from("membres")
-      .select("numero_membre, prenom, nom, classe, annee_scolaire, statut, photo_url")
+      .select("id, numero_membre, prenom, nom, classe, annee_scolaire, statut, photo_url")
       .eq("user_id", userId)
       .maybeSingle();
     if (m) setMembre(m as Membre);
+  }
+
+  async function activerNotifications() {
+    if (!membre) return;
+    setNotifStatut("en_cours");
+    try {
+      const jeton = await demanderPermissionEtObtenirJeton();
+      if (!jeton) {
+        setNotifStatut("erreur");
+        return;
+      }
+      const { error } = await supabase
+        .from("membre_fcm_tokens")
+        .upsert({ membre_id: membre.id, token: jeton }, { onConflict: "token" });
+      if (error) throw error;
+      setNotifStatut("actif");
+    } catch {
+      setNotifStatut("erreur");
+    }
   }
 
   async function connexion(e: React.FormEvent<HTMLFormElement>) {
@@ -165,6 +189,27 @@ export default function EspaceMembre() {
                 </p>
               </div>
             </div>
+          </div>
+
+          <div style={{ marginTop: 20 }}>
+            {notifStatut === "actif" ? (
+              <p style={{ color: "var(--emerald)", fontWeight: 600 }}>
+                🔔 Notifications activées
+              </p>
+            ) : (
+              <button
+                className="btn btn-gold"
+                onClick={activerNotifications}
+                disabled={notifStatut === "en_cours"}
+              >
+                {notifStatut === "en_cours" ? "Activation..." : "🔔 Activer les notifications"}
+              </button>
+            )}
+            {notifStatut === "erreur" && (
+              <p style={{ color: "#8a2d2d", marginTop: 8 }}>
+                Impossible d'activer les notifications sur cet appareil/navigateur.
+              </p>
+            )}
           </div>
         </div>
       </section>
