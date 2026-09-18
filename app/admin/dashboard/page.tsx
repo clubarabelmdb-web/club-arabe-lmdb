@@ -174,6 +174,9 @@ export default function Dashboard() {
               <Link href="/admin/infos-paiement" className="btn btn-outline">
                 📲 Infos Wave/OM
               </Link>
+              <Link href="/admin/notifications" className="btn btn-outline">
+                🔔 Notifications
+              </Link>
               <Link href="/admin/actualites" className="btn btn-outline">
                 📰 Actualités
               </Link>
