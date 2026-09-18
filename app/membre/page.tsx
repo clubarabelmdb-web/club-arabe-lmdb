@@ -64,7 +64,8 @@ export default function EspaceMembre() {
         .upsert({ membre_id: membre.id, token: jeton }, { onConflict: "token" });
       if (error) throw error;
       setNotifStatut("actif");
-    } catch {
+    } catch (err) {
+      console.error("Erreur activation notifications :", err);
       setNotifStatut("erreur");
     }
   }
