@@ -41,6 +41,7 @@ export default function Dashboard() {
   const [onglet, setOnglet] = useState<"demandes" | "membres">("demandes");
   const [enCours, setEnCours] = useState<string | null>(null);
   const [copie, setCopie] = useState<string | null>(null);
+  const [motsDePasse, setMotsDePasse] = useState<Record<string, string>>({});
 
   useEffect(() => {
     verifierAccesEtCharger();
@@ -84,8 +85,34 @@ export default function Dashboard() {
 
   async function valider(id: string) {
     setEnCours(id);
-    const { error } = await supabase.rpc("valider_inscription", { inscription_id_param: id });
-    if (error) alert("Erreur : " + error.message);
+    const { data: nouveauMembre, error } = await supabase.rpc("valider_inscription", {
+      inscription_id_param: id,
+    });
+    if (error) {
+      alert("Erreur : " + error.message);
+      setEnCours(null);
+      return;
+    }
+
+    try {
+      const reponse = await fetch("/api/creer-compte-membre", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ membreId: nouveauMembre.id }),
+      });
+      const data = await reponse.json();
+      if (reponse.ok && data.motDePasse) {
+        setMotsDePasse((prev) => ({ ...prev, [nouveauMembre.id]: data.motDePasse }));
+      } else if (!data.dejaExistant) {
+        alert(
+          "Le membre a été validé, mais la création du compte a échoué : " +
+            (data.error || "erreur inconnue")
+        );
+      }
+    } catch {
+      alert("Le membre a été validé, mais la création du compte a échoué.");
+    }
+
     await chargerDonnees();
     setEnCours(null);
   }
@@ -99,7 +126,11 @@ export default function Dashboard() {
   }
 
   async function copierMessage(m: Membre) {
-    const message = `Salam alaykoum ${m.prenom},\n\nTon inscription au Club Arabe LMDB est officiellement validée ! 🎉\nNuméro de membre : ${m.numero_membre}\n\nProchaine étape : rejoins notre groupe WhatsApp du club pour ne rien manquer Utilise ce lien pour intégrer mon groupe WhatsApp : https://chat.whatsapp.com/DSuk1LcsinpA2dQe6Pu0aJ?s=sw&p=a&mlu=4&ilr=4, et jette un œil aux prochaines activités sur le site : club-arabe-lmdb.vercel.app/activites\n\nAu plaisir de te voir bientôt !`;
+    const motDePasse = motsDePasse[m.id];
+    const ligneConnexion = motDePasse
+      ? `\n\nTon compte est déjà créé ! Connecte-toi sur club-arabe-lmdb.vercel.app/membre avec :\nE-mail : ${m.email}\nMot de passe : ${motDePasse}\n(pense à le changer si tu veux, une fois connecté)`
+      : "";
+    const message = `Salam alaykoum ${m.prenom},\n\nTon inscription au Club Arabe LMDB est officiellement validée ! 🎉\nNuméro de membre : ${m.numero_membre}${ligneConnexion}\n\nRejoins notre groupe WhatsApp du club pour ne rien manquer : https://chat.whatsapp.com/DSuk1LcsinpA2dQe6Pu0aJ?s=sw&p=a&mlu=4&ilr=4\n\nAu plaisir de te voir bientôt !`;
     await navigator.clipboard.writeText(message);
     setCopie(m.id);
     setTimeout(() => setCopie(null), 2000);
