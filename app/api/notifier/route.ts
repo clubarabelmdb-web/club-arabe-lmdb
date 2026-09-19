@@ -16,24 +16,41 @@ export async function POST(request: NextRequest) {
       { global: { headers: { Authorization: `Bearer ${token}` } } }
     );
 
-    const { data: userData } = await supabase.auth.getUser(token);
+    const { data: userData, error: userError } = await supabase.auth.getUser(token);
     if (!userData.user) {
-      return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Non authentifié : " + (userError?.message || "session invalide") },
+        { status: 401 }
+      );
     }
 
-    const { data: admin } = await supabase
+    const { data: admin, error: adminError } = await supabase
       .from("administrateurs")
       .select("id")
       .eq("user_id", userData.user.id)
       .maybeSingle();
 
     if (!admin) {
-      return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Accès refusé : " + (adminError?.message || "aucune fiche admin trouvée") },
+        { status: 403 }
+      );
     }
 
     const { titre, message } = await request.json();
     if (!titre || !message) {
       return NextResponse.json({ error: "Titre et message requis" }, { status: 400 });
+    }
+
+    // Enregistre la notification dans l'historique de chaque membre
+    const { data: tousLesMembres } = await supabase.from("membres").select("id");
+    if (tousLesMembres && tousLesMembres.length > 0) {
+      const lignes = tousLesMembres.map((m) => ({
+        membre_id: m.id,
+        titre,
+        message,
+      }));
+      await supabase.from("notifications").insert(lignes);
     }
 
     const { data: jetons } = await supabase.from("membre_fcm_tokens").select("token");

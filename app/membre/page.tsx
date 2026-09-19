@@ -17,11 +17,19 @@ type Membre = {
   photo_url: string | null;
 };
 
+type Notification = {
+  id: string;
+  titre: string;
+  message: string;
+  cree_le: string;
+};
+
 export default function EspaceMembre() {
   const supabase = createClient();
   const [connecte, setConnecte] = useState(false);
   const [chargement, setChargement] = useState(true);
   const [membre, setMembre] = useState<Membre | null>(null);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [erreur, setErreur] = useState("");
   const [notifStatut, setNotifStatut] = useState<"inactif" | "en_cours" | "actif" | "erreur">(
     "inactif"
@@ -47,7 +55,15 @@ export default function EspaceMembre() {
       .select("id, numero_membre, prenom, nom, classe, annee_scolaire, statut, photo_url")
       .eq("user_id", userId)
       .maybeSingle();
-    if (m) setMembre(m as Membre);
+    if (m) {
+      setMembre(m as Membre);
+      const { data: notifs } = await supabase
+        .from("notifications")
+        .select("id, titre, message, cree_le")
+        .eq("membre_id", (m as Membre).id)
+        .order("cree_le", { ascending: false });
+      setNotifications((notifs as Notification[]) ?? []);
+    }
   }
 
   async function activerNotifications() {
@@ -210,6 +226,29 @@ export default function EspaceMembre() {
               <p style={{ color: "#8a2d2d", marginTop: 8 }}>
                 Impossible d'activer les notifications sur cet appareil/navigateur.
               </p>
+            )}
+          </div>
+
+          <div style={{ marginTop: 32 }}>
+            <h2 style={{ fontSize: "1.2rem" }}>Notifications</h2>
+            {notifications.length === 0 ? (
+              <p style={{ color: "#6b6656" }}>Aucune notification pour le moment.</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {notifications.map((n) => (
+                  <div key={n.id} className="card">
+                    <p style={{ fontWeight: 600, margin: 0 }}>{n.titre}</p>
+                    <p style={{ color: "#4a463d", margin: "4px 0 0" }}>{n.message}</p>
+                    <p style={{ color: "#6b6656", fontSize: "0.8rem", margin: "8px 0 0" }}>
+                      {new Date(n.cree_le).toLocaleDateString("fr-FR", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </p>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </div>
