@@ -15,6 +15,9 @@ export default function NotificationsAdmin() {
   const [envoi, setEnvoi] = useState(false);
   const [resultat, setResultat] = useState<string | null>(null);
   const [nombreAbonnes, setNombreAbonnes] = useState<number | null>(null);
+  const [historique, setHistorique] = useState<{ titre: string; message: string; cree_le: string }[]>(
+    []
+  );
 
   useEffect(() => {
     verifierAccesEtCharger();
@@ -42,7 +45,41 @@ export default function NotificationsAdmin() {
       .select("id", { count: "exact", head: true });
     setNombreAbonnes(count ?? 0);
 
+    await chargerHistorique();
     setPret(true);
+  }
+
+  async function chargerHistorique() {
+    const { data } = await supabase
+      .from("notifications")
+      .select("titre, message, cree_le")
+      .order("cree_le", { ascending: false });
+
+    const vues = new Set<string>();
+    const uniques: { titre: string; message: string; cree_le: string }[] = [];
+    for (const n of data ?? []) {
+      const cle = `${n.titre}|${n.message}|${n.cree_le}`;
+      if (!vues.has(cle)) {
+        vues.add(cle);
+        uniques.push(n);
+      }
+    }
+    setHistorique(uniques);
+  }
+
+  async function supprimerNotification(n: { titre: string; message: string; cree_le: string }) {
+    const confirmation = window.confirm("Supprimer cette notification pour tous les membres ?");
+    if (!confirmation) return;
+
+    const { error } = await supabase
+      .from("notifications")
+      .delete()
+      .eq("titre", n.titre)
+      .eq("message", n.message)
+      .eq("cree_le", n.cree_le);
+
+    if (error) alert("Erreur : " + error.message);
+    await chargerHistorique();
   }
 
   async function envoyer(e: React.FormEvent) {
@@ -72,6 +109,7 @@ export default function NotificationsAdmin() {
         setResultat(`✅ Notification envoyée à ${data.envoyes} membre(s).`);
         setTitre("");
         setMessage("");
+        await chargerHistorique();
       }
     } catch {
       setResultat("Erreur lors de l'envoi.");
@@ -131,6 +169,36 @@ export default function NotificationsAdmin() {
               <p style={{ marginTop: 12, color: "var(--emerald)" }}>{resultat}</p>
             )}
           </form>
+
+          <h2 style={{ fontSize: "1.2rem", marginTop: 40 }}>Historique des envois</h2>
+          {historique.length === 0 ? (
+            <p style={{ color: "#6b6656" }}>Aucune notification envoyée pour le moment.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {historique.map((n) => (
+                <div
+                  key={`${n.titre}-${n.cree_le}`}
+                  className="card"
+                  style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}
+                >
+                  <div>
+                    <p style={{ fontWeight: 600, margin: 0 }}>{n.titre}</p>
+                    <p style={{ color: "#4a463d", margin: "4px 0 0" }}>{n.message}</p>
+                    <p style={{ color: "#6b6656", fontSize: "0.8rem", margin: "8px 0 0" }}>
+                      {new Date(n.cree_le).toLocaleDateString("fr-FR", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </p>
+                  </div>
+                  <button className="btn btn-outline" onClick={() => supprimerNotification(n)}>
+                    🗑️ Supprimer
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </main>
