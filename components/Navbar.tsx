@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { createClient } from "@/lib/supabaseClient";
 
 const links = [
   { href: "/", label: "Accueil" },
@@ -15,7 +16,64 @@ const links = [
 ];
 
 export default function Navbar() {
+  const supabase = createClient();
   const [menuOuvert, setMenuOuvert] = useState(false);
+  const [membre, setMembre] = useState<{ prenom: string; photo_url: string | null } | null>(
+    null
+  );
+
+  useEffect(() => {
+    verifierConnexion();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function verifierConnexion() {
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) return;
+    const { data: m } = await supabase
+      .from("membres")
+      .select("prenom, photo_url")
+      .eq("user_id", data.user.id)
+      .maybeSingle();
+    if (m) setMembre(m);
+  }
+
+  function AvatarMembre() {
+    return (
+      <Link
+        href="/membre/profil"
+        onClick={() => setMenuOuvert(false)}
+        title="Mon profil"
+        style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}
+      >
+        {membre?.photo_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={membre.photo_url}
+            alt={membre.prenom}
+            style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover" }}
+          />
+        ) : (
+          <div
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: "50%",
+              background: "var(--emerald)",
+              color: "#fff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: 700,
+              fontSize: "0.9rem",
+            }}
+          >
+            {membre?.prenom?.[0]}
+          </div>
+        )}
+      </Link>
+    );
+  }
 
   return (
     <header
@@ -79,9 +137,13 @@ export default function Navbar() {
           <Link href="/inscription" className="btn btn-primary" style={{ padding: "10px 20px" }}>
             S'inscrire
           </Link>
-          <Link href="/membre" className="btn btn-outline" style={{ padding: "10px 18px" }}>
-            Se connecter
-          </Link>
+          {membre ? (
+            <AvatarMembre />
+          ) : (
+            <Link href="/membre" className="btn btn-outline" style={{ padding: "10px 18px" }}>
+              Se connecter
+            </Link>
+          )}
         </nav>
 
         {/* Bouton hamburger (mobile uniquement) */}
@@ -139,14 +201,20 @@ export default function Navbar() {
           >
             S'inscrire
           </Link>
-          <Link
-            href="/membre"
-            onClick={() => setMenuOuvert(false)}
-            className="btn btn-outline"
-            style={{ marginTop: 8, textAlign: "center" }}
-          >
-            Se connecter
-          </Link>
+          {membre ? (
+            <div style={{ marginTop: 12 }}>
+              <AvatarMembre />
+            </div>
+          ) : (
+            <Link
+              href="/membre"
+              onClick={() => setMenuOuvert(false)}
+              className="btn btn-outline"
+              style={{ marginTop: 8, textAlign: "center" }}
+            >
+              Se connecter
+            </Link>
+          )}
         </nav>
       )}
     </header>
