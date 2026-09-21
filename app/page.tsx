@@ -23,31 +23,40 @@ export default async function Accueil() {
 
   return (
     <main>
+      {/* HERO */}
       <section
         style={{
-          background: "var(--emerald-deep)",
+          background:
+            "radial-gradient(circle at 15% 20%, rgba(212,175,106,0.16), transparent 40%), linear-gradient(135deg, #064e3b 0%, #087f5b 65%, #0b6b52 100%)",
           color: "var(--parchment)",
           position: "relative",
           overflow: "hidden",
         }}
       >
         <GeometricPattern
-          color="#c9a227"
-          opacity={0.18}
+          color="#d4af6a"
+          opacity={0.14}
           className="hero-pattern"
         />
         <div
           className="container hero-grid"
           style={{
             position: "relative",
-            padding: "96px 24px 88px",
+            padding: "104px 24px 96px",
           }}
         >
           <div>
             <p className="eyebrow-line" style={{ color: "var(--gold-soft)" }}>
               Lycée Maba Diakhou Ba
             </p>
-            <h1 style={{ fontSize: "clamp(2.2rem, 5vw, 3.4rem)", maxWidth: "16ch" }}>
+            <h1
+              style={{
+                fontSize: "clamp(2.3rem, 5vw, 3.6rem)",
+                maxWidth: "16ch",
+                color: "var(--parchment)",
+                textShadow: "0 2px 24px rgba(0,0,0,0.25)",
+              }}
+            >
               Le Club Arabe : langue, culture et savoir partagés
             </h1>
             <p style={{ color: "var(--gold-soft)", fontSize: "1.1rem", maxWidth: "48ch" }}>
@@ -61,7 +70,11 @@ export default async function Accueil() {
               <Link
                 href="/a-propos"
                 className="btn"
-                style={{ border: "1.5px solid var(--parchment)", color: "var(--parchment)" }}
+                style={{
+                  border: "1.5px solid rgba(252,250,244,0.5)",
+                  color: "var(--parchment)",
+                  background: "rgba(255,255,255,0.06)",
+                }}
               >
                 Découvrir le club
               </Link>
@@ -70,6 +83,7 @@ export default async function Accueil() {
         </div>
       </section>
 
+      {/* OBJECTIFS */}
       <section className="section">
         <div className="container">
           <p className="eyebrow-line">Ce que propose le club</p>
@@ -102,6 +116,7 @@ export default async function Accueil() {
 
       <hr className="divider" />
 
+      {/* ACTUALITÉS RÉCENTES */}
       <section className="section">
         <div className="container">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
@@ -131,6 +146,7 @@ export default async function Accueil() {
         </div>
       </section>
 
+      {/* CTA FINAL */}
       <section
         className="section"
         style={{ background: "var(--emerald-soft)", textAlign: "center" }}
