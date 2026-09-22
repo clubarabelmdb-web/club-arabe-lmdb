@@ -18,31 +18,8 @@ async function getDerniereActualite() {
   }
 }
 
-async function getStatistiques() {
-  try {
-    const supabase = createClient();
-    const { count: nbMembres } = await supabase
-      .from("membres")
-      .select("id", { count: "exact", head: true });
-    const { count: nbActivites } = await supabase
-      .from("activites")
-      .select("id", { count: "exact", head: true });
-    const { count: nbActualites } = await supabase
-      .from("actualites")
-      .select("id", { count: "exact", head: true });
-    return {
-      membres: nbMembres ?? 0,
-      activites: nbActivites ?? 0,
-      actualites: nbActualites ?? 0,
-    };
-  } catch {
-    return { membres: 0, activites: 0, actualites: 0 };
-  }
-}
-
 export default async function Accueil() {
   const actualites = await getDerniereActualite();
-  const stats = await getStatistiques();
 
   return (
     <main>
@@ -62,7 +39,7 @@ export default async function Accueil() {
           className="hero-pattern"
         />
         <div
-          className="container hero-grid"
+          className="container"
           style={{
             position: "relative",
             padding: "104px 24px 96px",
@@ -102,43 +79,6 @@ export default async function Accueil() {
                 Découvrir le club
               </Link>
             </div>
-          </div>
-
-          <div
-            style={{
-              background: "rgba(255,255,255,0.08)",
-              border: "1px solid rgba(212,175,106,0.35)",
-              borderRadius: "var(--radius-lg, 18px)",
-              backdropFilter: "blur(6px)",
-              padding: 28,
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 20,
-            }}
-          >
-            {[
-              { chiffre: stats.membres, label: "Membres" },
-              { chiffre: stats.activites, label: "Activités" },
-              { chiffre: stats.actualites, label: "Actualités" },
-              { chiffre: "2026", label: "Année scolaire" },
-            ].map((s) => (
-              <div key={s.label}>
-                <p
-                  style={{
-                    fontSize: "2.1rem",
-                    fontWeight: 700,
-                    color: "var(--gold-soft)",
-                    margin: 0,
-                    fontFamily: "var(--font-display)",
-                  }}
-                >
-                  {s.chiffre}
-                </p>
-                <p style={{ color: "var(--parchment)", margin: 0, fontSize: "0.9rem" }}>
-                  {s.label}
-                </p>
-              </div>
-            ))}
           </div>
         </div>
       </section>
