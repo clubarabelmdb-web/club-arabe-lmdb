@@ -20,6 +20,8 @@ export default function GestionAdministrateurs() {
   const [administrateurs, setAdministrateurs] = useState<Administrateur[]>([]);
   const [nom, setNom] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmation, setConfirmation] = useState("");
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState("");
   const [message, setMessage] = useState("");
@@ -78,16 +80,23 @@ export default function GestionAdministrateurs() {
     setEnvoi(true);
     setErreur("");
     setMessage("");
+    if (password !== confirmation) {
+      setErreur("Les deux mots de passe ne correspondent pas.");
+      setEnvoi(false);
+      return;
+    }
     try {
       const resultat = await envoyerRequete("/api/administrateurs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nom, email }),
+        body: JSON.stringify({ nom, email, password }),
       });
       if (!resultat) return;
       setMessage(resultat.message ?? "Administrateur ajouté.");
       setNom("");
       setEmail("");
+      setPassword("");
+      setConfirmation("");
       await chargerAdministrateurs();
     } catch (cause) {
       setErreur(cause instanceof Error ? cause.message : "Impossible d'ajouter cet administrateur.");
@@ -114,8 +123,8 @@ export default function GestionAdministrateurs() {
           <p className="eyebrow-line" style={{ marginTop: 16 }}>Espace administrateur</p>
           <h1 style={{ fontSize: "1.9rem" }}>Gérer les administrateurs</h1>
           <p style={{ color: "#6b6656" }}>
-            Ajoute un compte existant ou envoie une invitation par e-mail. Les
-            nouveaux administrateurs recevront un lien pour choisir leur mot de passe.
+            Crée son accès directement ici : aucun e-mail ne sera envoyé. Si
+            l’adresse a déjà un compte, le mot de passe sera remplacé par celui-ci.
           </p>
         </div>
       </section>
@@ -130,6 +139,32 @@ export default function GestionAdministrateurs() {
               value={nom}
               onChange={(e) => setNom(e.target.value)}
               maxLength={120}
+              required
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="admin-password">Mot de passe</label>
+            <input
+              id="admin-password"
+              type="password"
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              minLength={8}
+              maxLength={72}
+              required
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="admin-password-confirmation">Confirmer le mot de passe</label>
+            <input
+              id="admin-password-confirmation"
+              type="password"
+              autoComplete="new-password"
+              value={confirmation}
+              onChange={(e) => setConfirmation(e.target.value)}
+              minLength={8}
+              maxLength={72}
               required
             />
           </div>

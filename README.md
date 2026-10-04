@@ -60,10 +60,12 @@ values ('UID-COPIÉ-ICI', 'Ton Nom', 'super_admin');
 Pour une base de données déjà installée, exécute également
 `supabase/administrateurs.sql` dans le SQL Editor de Supabase. Une fois connecté
 avec un compte `super_admin`, ouvre **Administrateurs** depuis le tableau de
-bord pour ajouter un compte existant ou envoyer une invitation par e-mail.
+bord pour créer un compte administrateur en renseignant son e-mail et son mot
+de passe. Aucun e-mail d'invitation n'est envoyé. Si l'adresse correspond à un
+compte déjà existant, son mot de passe est remplacé par celui défini ici.
 Ajoute `SUPABASE_SERVICE_ROLE_KEY` dans les variables d'environnement de
-déploiement : cette clé est utilisée uniquement par le serveur pour gérer les
-invitations et ne doit jamais être exposée dans le navigateur.
+déploiement : cette clé est utilisée uniquement par le serveur pour créer les
+comptes et ne doit jamais être exposée dans le navigateur.
 
 ## 6. Lancer le site en local
 

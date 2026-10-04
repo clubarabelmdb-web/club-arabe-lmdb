@@ -112,23 +112,27 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Requête invalide." }, { status: 400 });
   }
 
-  const donnees = body as { nom?: unknown; email?: unknown };
+  const donnees = body as { nom?: unknown; email?: unknown; password?: unknown };
   const nom = typeof donnees.nom === "string" ? donnees.nom.trim() : "";
   const email = typeof donnees.email === "string" ? donnees.email.trim().toLowerCase() : "";
+  const password = typeof donnees.password === "string" ? donnees.password : "";
   if (
     !nom ||
     nom.length > 120 ||
     email.length > 254 ||
-    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
+    password.length < 8 ||
+    password.length > 72
   ) {
     return NextResponse.json(
-      { error: "Saisis un nom et une adresse e-mail valides." },
+      { error: "Saisis un nom, un e-mail valide et un mot de passe de 8 à 72 caractères." },
       { status: 400 }
     );
   }
 
   const { supabaseAdmin } = verification;
   let userId: string | undefined;
+  let utilisateurExistant = false;
   for (let page = 1; page <= 100; page++) {
     const { data: utilisateurs, error: listeError } =
       await supabaseAdmin.auth.admin.listUsers({ page, perPage: 1000 });
@@ -138,17 +142,16 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-    const utilisateurExistant = utilisateurs.users.find(
+    const utilisateurTrouve = utilisateurs.users.find(
       (utilisateur) => utilisateur.email?.toLowerCase() === email
     );
-    if (utilisateurExistant) {
-      userId = utilisateurExistant.id;
+    if (utilisateurTrouve) {
+      userId = utilisateurTrouve.id;
+      utilisateurExistant = true;
       break;
     }
     if (utilisateurs.users.length < 1000) break;
   }
-
-  let utilisateurInvite = false;
 
   if (userId) {
     const { data: adminExistant, error: adminExistantError } = await supabaseAdmin
@@ -169,27 +172,20 @@ export async function POST(request: NextRequest) {
       );
     }
   } else {
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
-    const { data: invitation, error: invitationError } =
-      await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-        redirectTo: `${siteUrl}/membre/definir-mot-de-passe?destination=admin`,
-        data: { full_name: nom },
+    const { data: nouvelUtilisateur, error: creationError } =
+      await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { full_name: nom },
       });
-    if (invitationError || !invitation.user) {
+    if (creationError || !nouvelUtilisateur.user) {
       return NextResponse.json(
-        { error: invitationError?.message || "Impossible d'envoyer l'invitation." },
+        { error: creationError?.message || "Impossible de créer le compte administrateur." },
         { status: 500 }
       );
     }
-    userId = invitation.user.id;
-    utilisateurInvite = true;
-  }
-
-  if (!userId) {
-    return NextResponse.json(
-      { error: "Impossible d'identifier le compte administrateur." },
-      { status: 500 }
-    );
+    userId = nouvelUtilisateur.user.id;
   }
 
   const { error: insertionError } = await supabaseAdmin.from("administrateurs").insert({
@@ -198,10 +194,10 @@ export async function POST(request: NextRequest) {
     role: "admin",
   });
   if (insertionError) {
-    if (utilisateurInvite && userId) {
+    if (!utilisateurExistant) {
       const { error: suppressionError } = await supabaseAdmin.auth.admin.deleteUser(userId);
       if (suppressionError) {
-        console.error("Impossible d'annuler le compte admin invité :", suppressionError.message);
+        console.error("Impossible d'annuler le compte admin créé :", suppressionError.message);
       }
     }
     return NextResponse.json(
@@ -210,10 +206,31 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  if (utilisateurExistant) {
+    const { error: motDePasseError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+      password,
+    });
+    if (motDePasseError) {
+      const { error: suppressionAdminError } = await supabaseAdmin
+        .from("administrateurs")
+        .delete()
+        .eq("user_id", userId);
+      if (suppressionAdminError) {
+        console.error("Impossible d'annuler l'ajout administrateur :", suppressionAdminError.message);
+        return NextResponse.json(
+          { error: "Le mot de passe n'a pas pu être défini et le rôle admin doit être retiré manuellement." },
+          { status: 500 }
+        );
+      }
+      return NextResponse.json(
+        { error: `Le mot de passe n'a pas pu être défini : ${motDePasseError.message}` },
+        { status: 500 }
+      );
+    }
+  }
+
   return NextResponse.json({
     success: true,
-    message: utilisateurInvite
-      ? "Invitation envoyée. L'administrateur devra choisir son mot de passe."
-      : "L'administrateur a été ajouté. Il peut se connecter avec son compte existant.",
+    message: "Administrateur ajouté. Il peut se connecter avec l'adresse e-mail et le mot de passe définis.",
   });
 }
