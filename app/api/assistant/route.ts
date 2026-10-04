@@ -111,45 +111,54 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Le message est invalide ou trop long." }, { status: 400 });
   }
 
-  let geminiResponse: Response;
-  try {
-    geminiResponse = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": geminiApiKey,
-        },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: instructionSysteme }] },
-          contents: messagesValue.map((message) => ({
-            role: (message as Message).role === "assistant" ? "model" : "user",
-            parts: [{ text: (message as Message).content.trim() }],
-          })),
-          generationConfig: { temperature: 0.4, maxOutputTokens: 600 },
-        }),
-        signal: AbortSignal.timeout(25_000),
+  const modeles = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-2.5-flash"];
+  let geminiResponse: Response | null = null;
+  let dernierErreur: unknown = null;
+
+  for (const modele of modeles) {
+    try {
+      geminiResponse = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${modele}:generateContent`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": geminiApiKey,
+          },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: instructionSysteme }] },
+            contents: messagesValue.map((message) => ({
+              role: (message as Message).role === "assistant" ? "model" : "user",
+              parts: [{ text: (message as Message).content.trim() }],
+            })),
+            generationConfig: { temperature: 0.4, maxOutputTokens: 600 },
+          }),
+          signal: AbortSignal.timeout(25_000),
+        }
+      );
+      if (geminiResponse.ok) break;
+      dernierErreur = { status: geminiResponse.status, statusText: geminiResponse.statusText };
+      if (geminiResponse.status === 429) break;
+      if (geminiResponse.status === 400 || geminiResponse.status === 404) {
+        continue;
       }
-    );
-  } catch (error) {
-    console.error("La requête à l'assistant IA a échoué :", error);
-    return NextResponse.json(
-      { error: "L’assistant IA ne répond pas pour le moment. Réessaie dans quelques instants." },
-      { status: 502 }
-    );
+      break;
+    } catch (error) {
+      dernierErreur = error;
+      break;
+    }
   }
 
-  if (!geminiResponse.ok) {
-    console.error("Le fournisseur IA a renvoyé une erreur :", geminiResponse.status);
-    if (geminiResponse.status === 429) {
+  if (!geminiResponse || !geminiResponse.ok) {
+    console.error("Le fournisseur IA a renvoyé une erreur :", dernierErreur);
+    if (geminiResponse?.status === 429) {
       return NextResponse.json(
         { error: "Le quota de l’assistant IA est momentanément atteint. Réessaie plus tard." },
         { status: 429 }
       );
     }
     return NextResponse.json(
-      { error: "L’assistant IA est momentanément indisponible. Réessaie plus tard." },
+      { error: "L’assistant IA est momentanément indisponible. Vérifie que la clé GEMINI_API_KEY est valide et active dans Google AI Studio." },
       { status: 502 }
     );
   }
