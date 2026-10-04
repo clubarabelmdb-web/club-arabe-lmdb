@@ -198,6 +198,9 @@ export default function Dashboard() {
               <Link href="/admin/verification" className="btn btn-outline">
                 🪪 Vérifier une carte
               </Link>
+              <Link href="/admin/assistant" className="btn btn-outline">
+                🤖 Assistant IA
+              </Link>
               <Link href="/admin/galerie" className="btn btn-outline">
                 📸 Gérer la galerie
               </Link>
