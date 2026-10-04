@@ -113,8 +113,7 @@ export async function POST(request: NextRequest) {
 
   const modeles = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
   let geminiResponse: Response | null = null;
-  let dernierErreur: { modele: string; status: number; statusText: string; details?: string } | null =
-    null;
+  let dernierErreur: unknown = null;
 
   for (const modele of modeles) {
     try {
