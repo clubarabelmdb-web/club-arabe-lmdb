@@ -111,9 +111,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Le message est invalide ou trop long." }, { status: 400 });
   }
 
-  const modeles = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-2.5-flash"];
+  const modeles = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
   let geminiResponse: Response | null = null;
-  let dernierErreur: unknown = null;
+  let dernierErreur: { modele: string; status: number; statusText: string; details?: string } | null =
+    null;
 
   for (const modele of modeles) {
     try {
@@ -137,7 +138,25 @@ export async function POST(request: NextRequest) {
         }
       );
       if (geminiResponse.ok) break;
-      dernierErreur = { status: geminiResponse.status, statusText: geminiResponse.statusText };
+      let details: string | undefined;
+      try {
+        const payload: unknown = await geminiResponse.clone().json();
+        if (payload && typeof payload === "object") {
+          const error = (payload as Record<string, unknown>).error;
+          if (error && typeof error === "object") {
+            const message = (error as Record<string, unknown>).message;
+            if (typeof message === "string") details = message;
+          }
+        }
+      } catch {
+        details = undefined;
+      }
+      dernierErreur = {
+        modele,
+        status: geminiResponse.status,
+        statusText: geminiResponse.statusText,
+        ...(details ? { details } : {}),
+      };
       if (geminiResponse.status === 429) break;
       if (geminiResponse.status === 400 || geminiResponse.status === 404) {
         continue;
@@ -157,8 +176,14 @@ export async function POST(request: NextRequest) {
         { status: 429 }
       );
     }
+    if (geminiResponse?.status === 404) {
+      return NextResponse.json(
+        { error: "Google Gemini ne reconnaît pas le modèle demandé. Vérifie que l’API Gemini est activée pour la clé configurée." },
+        { status: 502 }
+      );
+    }
     return NextResponse.json(
-      { error: "L’assistant IA est momentanément indisponible. Vérifie que la clé GEMINI_API_KEY est valide et active dans Google AI Studio." },
+      { error: "L’assistant IA est momentanément indisponible. Vérifie que la clé GEMINI_API_KEY est valide et que l’API Gemini est activée dans Google AI Studio." },
       { status: 502 }
     );
   }
