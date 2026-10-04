@@ -63,6 +63,9 @@ avec un compte `super_admin`, ouvre **Administrateurs** depuis le tableau de
 bord pour créer un compte administrateur en renseignant son e-mail et son mot
 de passe. Aucun e-mail d'invitation n'est envoyé. Si l'adresse correspond à un
 compte déjà existant, son mot de passe est remplacé par celui défini ici.
+Un super-administrateur peut aussi retirer l'accès d'un autre administrateur
+depuis la même page; cela ne supprime pas son compte utilisateur. Son propre
+accès et le dernier super-administrateur ne peuvent pas être supprimés.
 Ajoute `SUPABASE_SERVICE_ROLE_KEY` dans les variables d'environnement de
 déploiement : cette clé est utilisée uniquement par le serveur pour créer les
 comptes et ne doit jamais être exposée dans le navigateur.

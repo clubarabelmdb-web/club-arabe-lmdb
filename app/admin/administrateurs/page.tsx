@@ -18,6 +18,7 @@ export default function GestionAdministrateurs() {
   const supabase = createClient();
   const [pret, setPret] = useState(false);
   const [administrateurs, setAdministrateurs] = useState<Administrateur[]>([]);
+  const [userIdCourant, setUserIdCourant] = useState("");
   const [nom, setNom] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,6 +28,9 @@ export default function GestionAdministrateurs() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) setUserIdCourant(data.user.id);
+    });
     chargerAdministrateurs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -100,6 +104,38 @@ export default function GestionAdministrateurs() {
       await chargerAdministrateurs();
     } catch (cause) {
       setErreur(cause instanceof Error ? cause.message : "Impossible d'ajouter cet administrateur.");
+    } finally {
+      setEnvoi(false);
+    }
+  }
+
+  async function supprimerAdministrateur(admin: Administrateur) {
+    if (admin.user_id === userIdCourant) {
+      setErreur("Tu ne peux pas supprimer ton propre accès administrateur.");
+      return;
+    }
+    if (
+      !window.confirm(
+        `Retirer l'accès administrateur de ${admin.nom} (${admin.email}) ? Son compte utilisateur ne sera pas supprimé.`
+      )
+    ) {
+      return;
+    }
+
+    setEnvoi(true);
+    setErreur("");
+    setMessage("");
+    try {
+      const resultat = await envoyerRequete("/api/administrateurs", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: admin.user_id }),
+      });
+      if (!resultat) return;
+      setMessage(resultat.message ?? "Accès administrateur supprimé.");
+      await chargerAdministrateurs();
+    } catch (cause) {
+      setErreur(cause instanceof Error ? cause.message : "Impossible de supprimer cet administrateur.");
     } finally {
       setEnvoi(false);
     }
@@ -192,12 +228,28 @@ export default function GestionAdministrateurs() {
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {administrateurs.map((admin) => (
-              <div key={admin.user_id} className="card">
-                <p style={{ fontWeight: 600, margin: 0 }}>{admin.nom}</p>
-                <p style={{ color: "#6b6656", margin: "4px 0 0" }}>{admin.email}</p>
-                <p style={{ color: "#6b6656", margin: "4px 0 0" }}>
-                  {admin.role === "super_admin" ? "Super-administrateur" : "Administrateur"}
-                </p>
+              <div
+                key={admin.user_id}
+                className="card"
+                style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}
+              >
+                <div>
+                  <p style={{ fontWeight: 600, margin: 0 }}>{admin.nom}</p>
+                  <p style={{ color: "#6b6656", margin: "4px 0 0" }}>{admin.email}</p>
+                  <p style={{ color: "#6b6656", margin: "4px 0 0" }}>
+                    {admin.role === "super_admin" ? "Super-administrateur" : "Administrateur"}
+                  </p>
+                </div>
+                {admin.user_id !== userIdCourant && (
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    disabled={envoi}
+                    onClick={() => supprimerAdministrateur(admin)}
+                  >
+                    Supprimer
+                  </button>
+                )}
               </div>
             ))}
           </div>

@@ -55,7 +55,7 @@ async function verifierSuperAdmin(request: NextRequest) {
     };
   }
 
-  return { supabaseAdmin };
+  return { supabaseAdmin, currentUserId: userData.user.id };
 }
 
 export async function GET(request: NextRequest) {
@@ -232,5 +232,85 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({
     success: true,
     message: "Administrateur ajouté. Il peut se connecter avec l'adresse e-mail et le mot de passe définis.",
+  });
+}
+
+export async function DELETE(request: NextRequest) {
+  const verification = await verifierSuperAdmin(request);
+  if ("response" in verification) return verification.response;
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Requête invalide." }, { status: 400 });
+  }
+  if (!body || typeof body !== "object") {
+    return NextResponse.json({ error: "Requête invalide." }, { status: 400 });
+  }
+
+  const userId = (body as { user_id?: unknown }).user_id;
+  if (typeof userId !== "string" || !/^[0-9a-f-]{36}$/i.test(userId)) {
+    return NextResponse.json({ error: "Administrateur invalide." }, { status: 400 });
+  }
+  if (userId === verification.currentUserId) {
+    return NextResponse.json(
+      { error: "Tu ne peux pas supprimer ton propre accès administrateur." },
+      { status: 409 }
+    );
+  }
+
+  const { supabaseAdmin } = verification;
+  const { data: cible, error: cibleError } = await supabaseAdmin
+    .from("administrateurs")
+    .select("user_id, role")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (cibleError) {
+    return NextResponse.json(
+      { error: "Impossible de vérifier cet administrateur." },
+      { status: 500 }
+    );
+  }
+  if (!cible) {
+    return NextResponse.json(
+      { error: "Cet administrateur n'existe plus." },
+      { status: 404 }
+    );
+  }
+
+  if (cible.role === "super_admin") {
+    const { count, error: comptageError } = await supabaseAdmin
+      .from("administrateurs")
+      .select("user_id", { count: "exact", head: true })
+      .eq("role", "super_admin");
+    if (comptageError) {
+      return NextResponse.json(
+        { error: "Impossible de vérifier le nombre de super-administrateurs." },
+        { status: 500 }
+      );
+    }
+    if ((count ?? 0) <= 1) {
+      return NextResponse.json(
+        { error: "Il faut conserver au moins un super-administrateur." },
+        { status: 409 }
+      );
+    }
+  }
+
+  const { error: suppressionError } = await supabaseAdmin
+    .from("administrateurs")
+    .delete()
+    .eq("user_id", userId);
+  if (suppressionError) {
+    return NextResponse.json(
+      { error: "Impossible de supprimer cet accès administrateur." },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({
+    success: true,
+    message: "Accès administrateur supprimé. Le compte utilisateur n'a pas été supprimé.",
   });
 }
