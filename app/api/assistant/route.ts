@@ -45,6 +45,19 @@ function extraireTexteGemini(payload: unknown): string | null {
   return texte || null;
 }
 
+async function extraireErreurGemini(response: Response): Promise<string | undefined> {
+  try {
+    const payload: unknown = await response.clone().json();
+    if (!payload || typeof payload !== "object") return undefined;
+    const error = (payload as Record<string, unknown>).error;
+    if (!error || typeof error !== "object") return undefined;
+    const message = (error as Record<string, unknown>).message;
+    return typeof message === "string" ? message : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function POST(request: NextRequest) {
   const authorization = request.headers.get("authorization");
   const token = authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
@@ -111,14 +124,86 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Le message est invalide ou trop long." }, { status: 400 });
   }
 
-  const modeles = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
+  let listeModelesResponse: Response;
+  try {
+    listeModelesResponse = await fetch("https://generativelanguage.googleapis.com/v1beta/models", {
+      headers: { "x-goog-api-key": geminiApiKey },
+      signal: AbortSignal.timeout(15_000),
+    });
+  } catch (error) {
+    console.error("Impossible de joindre l'API Gemini :", error);
+    return NextResponse.json(
+      { error: "Impossible de joindre Google Gemini. Réessaie dans quelques instants." },
+      { status: 502 }
+    );
+  }
+
+  if (!listeModelesResponse.ok) {
+    const details = await extraireErreurGemini(listeModelesResponse);
+    console.error("Impossible de lister les modèles Gemini :", {
+      status: listeModelesResponse.status,
+      details,
+    });
+    return NextResponse.json(
+      {
+        error:
+          listeModelesResponse.status === 401 || listeModelesResponse.status === 403
+            ? "Google refuse la clé GEMINI_API_KEY. Vérifie la clé et ses restrictions dans Google AI Studio."
+            : "Google Gemini ne permet pas de lister les modèles pour cette clé. Vérifie que la Gemini API est activée pour le projet associé.",
+      },
+      { status: 502 }
+    );
+  }
+
+  let modelesDisponibles: string[];
+  try {
+    const listePayload: unknown = await listeModelesResponse.json();
+    const models =
+      listePayload && typeof listePayload === "object"
+        ? (listePayload as Record<string, unknown>).models
+        : null;
+    if (!Array.isArray(models)) throw new Error("La liste des modèles Gemini est invalide.");
+    const modelesAvecGeneration = models
+      .filter((model): model is Record<string, unknown> => Boolean(model && typeof model === "object"))
+      .filter((model) => {
+        const methods = model.supportedGenerationMethods;
+        return Array.isArray(methods) && methods.includes("generateContent");
+      })
+      .map((model) => model.name)
+      .filter(
+        (name): name is string =>
+          typeof name === "string" &&
+          name.startsWith("models/") &&
+          !/image|audio|embedding/i.test(name)
+      );
+    const priorite = ["models/gemini-2.5-flash", "models/gemini-2.5-flash-lite"];
+    modelesDisponibles = [
+      ...priorite.filter((name) => modelesAvecGeneration.includes(name)),
+      ...modelesAvecGeneration.filter((name) => !priorite.includes(name)),
+    ].slice(0, 3);
+  } catch (error) {
+    console.error("Impossible de lire la liste des modèles Gemini :", error);
+    return NextResponse.json(
+      { error: "Google Gemini a renvoyé une liste de modèles invalide." },
+      { status: 502 }
+    );
+  }
+
+  if (modelesDisponibles.length === 0) {
+    console.error("Aucun modèle Gemini compatible avec generateContent n'est disponible pour cette clé.");
+    return NextResponse.json(
+      { error: "Aucun modèle de génération de texte Gemini n’est disponible pour cette clé." },
+      { status: 502 }
+    );
+  }
+
   let geminiResponse: Response | null = null;
   let dernierErreur: unknown = null;
 
-  for (const modele of modeles) {
+  for (const modele of modelesDisponibles) {
     try {
       geminiResponse = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${modele}:generateContent`,
+        `https://generativelanguage.googleapis.com/v1beta/${modele}:generateContent`,
         {
           method: "POST",
           headers: {
@@ -137,19 +222,7 @@ export async function POST(request: NextRequest) {
         }
       );
       if (geminiResponse.ok) break;
-      let details: string | undefined;
-      try {
-        const payload: unknown = await geminiResponse.clone().json();
-        if (payload && typeof payload === "object") {
-          const error = (payload as Record<string, unknown>).error;
-          if (error && typeof error === "object") {
-            const message = (error as Record<string, unknown>).message;
-            if (typeof message === "string") details = message;
-          }
-        }
-      } catch {
-        details = undefined;
-      }
+      const details = await extraireErreurGemini(geminiResponse);
       dernierErreur = {
         modele,
         status: geminiResponse.status,
@@ -173,12 +246,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "Le quota de l’assistant IA est momentanément atteint. Réessaie plus tard." },
         { status: 429 }
-      );
-    }
-    if (geminiResponse?.status === 404) {
-      return NextResponse.json(
-        { error: "Google Gemini ne reconnaît pas le modèle demandé. Vérifie que l’API Gemini est activée pour la clé configurée." },
-        { status: 502 }
       );
     }
     return NextResponse.json(
