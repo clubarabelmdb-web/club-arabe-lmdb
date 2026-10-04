@@ -123,6 +123,22 @@ create table if not exists administrateurs (
   cree_le timestamptz not null default now()
 );
 
+-- Vérifie le rôle sans réappliquer les politiques RLS de la table.
+create or replace function public.est_administrateur()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.administrateurs where user_id = auth.uid()
+  );
+$$;
+
+revoke all on function public.est_administrateur() from public;
+grant execute on function public.est_administrateur() to authenticated;
+
 -- ------------------------------------------------------------
 -- 4. ACTUALITÉS
 -- ------------------------------------------------------------
@@ -192,6 +208,14 @@ create table if not exists notifications (
   cree_le timestamptz not null default now()
 );
 
+create table if not exists membre_fcm_tokens (
+  id uuid primary key default uuid_generate_v4(),
+  membre_id uuid not null references membres(id) on delete cascade,
+  token text not null unique,
+  cree_le timestamptz not null default now()
+);
+create index if not exists membre_fcm_tokens_membre_id_idx on membre_fcm_tokens(membre_id);
+
 -- ------------------------------------------------------------
 -- 9. CONTACT (messages envoyés depuis la page contact)
 -- ------------------------------------------------------------
@@ -216,6 +240,7 @@ alter table albums enable row level security;
 alter table photos enable row level security;
 alter table messages enable row level security;
 alter table notifications enable row level security;
+alter table membre_fcm_tokens enable row level security;
 alter table messages_contact enable row level security;
 
 -- Permet de relancer ce fichier sans erreur si les policies existent déjà.
@@ -236,6 +261,7 @@ drop policy if exists "Admin accès total photos" on photos;
 drop policy if exists "Admin accès total messages" on messages;
 drop policy if exists "Admin accès total contact" on messages_contact;
 drop policy if exists "Admin voit tous les admins" on administrateurs;
+drop policy if exists "Admin accès total jetons notifications" on membre_fcm_tokens;
 
 -- Tout le monde peut créer une demande d'inscription et envoyer un message contact
 create policy "Inscription publique" on inscriptions for insert to anon, authenticated with check (true);
@@ -254,23 +280,26 @@ create policy "Un membre voit ses notifications" on notifications for select to 
 
 -- Les administrateurs ont un accès complet (vérifié via la table administrateurs)
 create policy "Admin accès total inscriptions" on inscriptions for all to authenticated
-  using (exists (select 1 from administrateurs where user_id = auth.uid()));
+  using (public.est_administrateur());
 create policy "Admin accès total membres" on membres for all to authenticated
-  using (exists (select 1 from administrateurs where user_id = auth.uid()));
+  using (public.est_administrateur());
 create policy "Admin accès total actualites" on actualites for all to authenticated
-  using (exists (select 1 from administrateurs where user_id = auth.uid()));
+  using (public.est_administrateur());
 create policy "Admin accès total activites" on activites for all to authenticated
-  using (exists (select 1 from administrateurs where user_id = auth.uid()));
+  using (public.est_administrateur());
 create policy "Admin accès total albums" on albums for all to authenticated
-  using (exists (select 1 from administrateurs where user_id = auth.uid()));
+  using (public.est_administrateur());
 create policy "Admin accès total photos" on photos for all to authenticated
-  using (exists (select 1 from administrateurs where user_id = auth.uid()));
+  using (public.est_administrateur());
 create policy "Admin accès total messages" on messages for all to authenticated
-  using (exists (select 1 from administrateurs where user_id = auth.uid()));
+  using (public.est_administrateur());
 create policy "Admin accès total contact" on messages_contact for all to authenticated
-  using (exists (select 1 from administrateurs where user_id = auth.uid()));
+  using (public.est_administrateur());
 create policy "Admin voit tous les admins" on administrateurs for select to authenticated
-  using (exists (select 1 from administrateurs where user_id = auth.uid()));
+  using (public.est_administrateur());
+create policy "Admin accès total jetons notifications" on membre_fcm_tokens for all to authenticated
+  using (public.est_administrateur())
+  with check (public.est_administrateur());
 
 -- Recharger le cache PostgREST après les changements de structure.
 notify pgrst, 'reload schema';

@@ -57,6 +57,14 @@ values ('UID-COPIÉ-ICI', 'Ton Nom', 'super_admin');
 5. Tu peux maintenant te connecter sur `/admin` avec cet e-mail et ce mot de
    passe.
 
+Pour une base de données déjà installée, exécute également
+`supabase/administrateurs.sql` dans le SQL Editor de Supabase. Une fois connecté
+avec un compte `super_admin`, ouvre **Administrateurs** depuis le tableau de
+bord pour ajouter un compte existant ou envoyer une invitation par e-mail.
+Ajoute `SUPABASE_SERVICE_ROLE_KEY` dans les variables d'environnement de
+déploiement : cette clé est utilisée uniquement par le serveur pour gérer les
+invitations et ne doit jamais être exposée dans le navigateur.
+
 ## 6. Lancer le site en local
 
 ```bash
@@ -75,10 +83,17 @@ Ouvre [http://localhost:3000](http://localhost:3000).
    **Add New Project** → sélectionne ton dépôt.
 3. Dans les réglages du projet Vercel, ajoute les mêmes variables
 d'environnement que dans `.env.local` (`NEXT_PUBLIC_SUPABASE_URL` et
-`NEXT_PUBLIC_SUPABASE_ANON_KEY`).
+`NEXT_PUBLIC_SUPABASE_ANON_KEY` et `SUPABASE_SERVICE_ROLE_KEY`). La clé
+`SUPABASE_SERVICE_ROLE_KEY` ne doit jamais être préfixée par `NEXT_PUBLIC_`.
 4. Clique **Deploy**. Ton site sera en ligne sur une adresse du type
    `club-arabe-lmdb.vercel.app` (tu pourras ajouter un nom de domaine plus
    tard si tu en achètes un).
+
+Pour une base Supabase déjà en service, exécute d'abord
+`supabase/administrateurs.sql`, puis `supabase/push_notifications.sql`, dans
+**SQL Editor**. Chaque membre doit ensuite autoriser les notifications sur
+chaque appareil depuis son espace membre pour recevoir les annonces lorsque le
+site est fermé.
 
 ---
 

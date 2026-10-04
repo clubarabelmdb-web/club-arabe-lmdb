@@ -38,6 +38,7 @@ export default function Dashboard() {
   const [pret, setPret] = useState(false);
   const [inscriptions, setInscriptions] = useState<Inscription[]>([]);
   const [membres, setMembres] = useState<Membre[]>([]);
+  const [superAdmin, setSuperAdmin] = useState(false);
   const [onglet, setOnglet] = useState<"demandes" | "membres">("demandes");
   const [enCours, setEnCours] = useState<string | null>(null);
   const [copie, setCopie] = useState<string | null>(null);
@@ -56,7 +57,7 @@ export default function Dashboard() {
     }
     const { data: admin } = await supabase
       .from("administrateurs")
-      .select("id")
+      .select("id, role")
       .eq("user_id", session.user.id)
       .maybeSingle();
 
@@ -65,6 +66,7 @@ export default function Dashboard() {
       return;
     }
 
+    setSuperAdmin(admin.role === "super_admin");
     await chargerDonnees();
     setPret(true);
   }
@@ -217,6 +219,11 @@ export default function Dashboard() {
               <Link href="/admin/bureau" className="btn btn-outline">
                 👥 Bureau
               </Link>
+              {superAdmin && (
+                <Link href="/admin/administrateurs" className="btn btn-outline">
+                  🔐 Administrateurs
+                </Link>
+              )}
             </div>
           </div>
 
