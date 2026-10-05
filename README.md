@@ -84,6 +84,9 @@ passe, de clé ou d'information personnelle supplémentaire dans les questions.
 L'espace membre affiche également les 100 paiements les plus récents du membre
 connecté, sans permettre leur modification. Chaque paiement dispose d'un reçu
 imprimable ou enregistrable en PDF depuis le navigateur.
+Les administrateurs peuvent envoyer une annonce à tous les membres ou à une
+classe précise; les notifications push sont limitées aux abonnés de cette
+audience, tandis que l'annonce est aussi enregistrée dans leur espace membre.
 
 ## 6. Lancer le site en local
 
@@ -128,6 +131,7 @@ site est fermé.
 - ✅ Espace membre avec carte numérique + QR code + notifications
 - ✅ Historique personnel des cotisations et paiements dans l'espace membre
 - ✅ Reçus de paiement imprimables / enregistrables en PDF
+- ✅ Notifications administrateur ciblées sur tous les membres ou une classe
 - ✅ Base de données complète (actualités, activités, galerie, messages)
 - ✅ Sécurité par Row Level Security (RLS) sur toutes les tables
 

@@ -12,6 +12,9 @@ export default function NotificationsAdmin() {
   const [pret, setPret] = useState(false);
   const [titre, setTitre] = useState("");
   const [message, setMessage] = useState("");
+  const [typeCible, setTypeCible] = useState<"tous" | "classe">("tous");
+  const [classeCible, setClasseCible] = useState("");
+  const [classes, setClasses] = useState<string[]>([]);
   const [envoi, setEnvoi] = useState(false);
   const [resultat, setResultat] = useState<string | null>(null);
   const [nombreAbonnes, setNombreAbonnes] = useState<number | null>(null);
@@ -40,10 +43,28 @@ export default function NotificationsAdmin() {
       return;
     }
 
-    const { count } = await supabase
+    const { count, error: abonnementsError } = await supabase
       .from("membre_fcm_tokens")
       .select("id", { count: "exact", head: true });
+    if (abonnementsError) {
+      setResultat("Impossible de charger le nombre d’abonnés aux notifications.");
+      return;
+    }
     setNombreAbonnes(count ?? 0);
+
+    const { data: membres, error: membresError } = await supabase
+      .from("membres")
+      .select("classe")
+      .order("classe", { ascending: true });
+    if (membresError) {
+      setResultat("Impossible de charger les classes disponibles.");
+      return;
+    }
+    setClasses(
+      [...new Set((membres ?? []).map((membre) => membre.classe.trim()).filter(Boolean))].sort(
+        (a, b) => a.localeCompare(b, "fr")
+      )
+    );
 
     await chargerHistorique();
     setPret(true);
@@ -84,11 +105,21 @@ export default function NotificationsAdmin() {
 
   async function envoyer(e: React.FormEvent) {
     e.preventDefault();
+    if (typeCible === "classe" && !classeCible) {
+      setResultat("Choisis une classe avant d’envoyer l’annonce.");
+      return;
+    }
     setEnvoi(true);
     setResultat(null);
 
     const { data: session } = await supabase.auth.getSession();
     const accessToken = session.session?.access_token;
+    if (!accessToken) {
+      setResultat("Ta session a expiré. Reconnecte-toi.");
+      setEnvoi(false);
+      router.replace("/admin");
+      return;
+    }
 
     try {
       const reponse = await fetch("/api/notifier", {
@@ -97,24 +128,57 @@ export default function NotificationsAdmin() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ titre, message }),
+        body: JSON.stringify({
+          titre,
+          message,
+          typeCible,
+          classe: typeCible === "classe" ? classeCible : null,
+        }),
       });
-      const data = await reponse.json();
+      const data: unknown = await reponse.json();
+      if (!data || typeof data !== "object") {
+        throw new Error("Réponse invalide du serveur de notifications.");
+      }
+      const resultatEnvoi = data as {
+        error?: unknown;
+        destinataires?: unknown;
+        pushEnvoyees?: unknown;
+        pushEchecs?: unknown;
+        avertissement?: unknown;
+      };
 
       if (!reponse.ok) {
-        setResultat("Erreur : " + (data.error || "Échec de l'envoi"));
-      } else if (data.envoyes === 0) {
-        setResultat("Aucun membre abonné aux notifications pour le moment.");
+        setResultat(
+          "Erreur : " +
+            (typeof resultatEnvoi.error === "string"
+              ? resultatEnvoi.error
+              : "Échec de l'envoi")
+        );
       } else {
-        setResultat(`✅ Notification envoyée à ${data.envoyes} membre(s).`);
+        const destinataires =
+          typeof resultatEnvoi.destinataires === "number" ? resultatEnvoi.destinataires : 0;
+        const pushEnvoyees =
+          typeof resultatEnvoi.pushEnvoyees === "number" ? resultatEnvoi.pushEnvoyees : 0;
+        const cibleLabel =
+          typeCible === "classe" ? `dans la classe ${classeCible}` : "au total";
+        const avertissement =
+          typeof resultatEnvoi.avertissement === "string"
+            ? ` ${resultatEnvoi.avertissement}`
+            : "";
+        setResultat(
+          `✅ Annonce enregistrée pour ${destinataires} membre(s) ${cibleLabel}. Notification push envoyée à ${pushEnvoyees} abonné(s).${avertissement}`
+        );
         setTitre("");
         setMessage("");
         await chargerHistorique();
       }
-    } catch {
-      setResultat("Erreur lors de l'envoi.");
+    } catch (error) {
+      setResultat(
+        error instanceof Error ? error.message : "Une erreur inattendue est survenue lors de l’envoi."
+      );
+    } finally {
+      setEnvoi(false);
     }
-    setEnvoi(false);
   }
 
   if (!pret) {
@@ -159,14 +223,63 @@ export default function NotificationsAdmin() {
                 rows={3}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
+                maxLength={2000}
                 required
               />
             </div>
+            <div className="field">
+              <label htmlFor="destinataire">Destinataires</label>
+              <select
+                id="destinataire"
+                value={typeCible}
+                onChange={(e) => setTypeCible(e.target.value === "classe" ? "classe" : "tous")}
+              >
+                <option value="tous">Tous les membres</option>
+                <option value="classe">Une classe précise</option>
+              </select>
+            </div>
+            {typeCible === "classe" && (
+              <div className="field">
+                <label htmlFor="classe-cible">Classe destinataire</label>
+                <select
+                  id="classe-cible"
+                  value={classeCible}
+                  onChange={(e) => setClasseCible(e.target.value)}
+                  required
+                >
+                  <option value="">Choisir une classe...</option>
+                  {classes.map((classe) => (
+                    <option key={classe} value={classe}>
+                      {classe}
+                    </option>
+                  ))}
+                </select>
+                {classes.length === 0 && (
+                  <p style={{ color: "#6b6656", fontSize: "0.85rem" }}>
+                    Aucune classe n’est disponible.
+                  </p>
+                )}
+              </div>
+            )}
             <button type="submit" className="btn btn-primary" disabled={envoi}>
-              {envoi ? "Envoi..." : "🔔 Envoyer à tous les abonnés"}
+              {envoi
+                ? "Envoi..."
+                : typeCible === "classe"
+                  ? "🔔 Envoyer à cette classe"
+                  : "🔔 Envoyer à tous les membres"}
             </button>
             {resultat && (
-              <p style={{ marginTop: 12, color: "var(--emerald)" }}>{resultat}</p>
+              <p
+                role="status"
+                style={{
+                  marginTop: 12,
+                  color: resultat.startsWith("Erreur") || resultat.includes("expiré")
+                    ? "#8a2d2d"
+                    : "var(--emerald)",
+                }}
+              >
+                {resultat}
+              </p>
             )}
           </form>
 
