@@ -24,12 +24,41 @@ type Notification = {
   cree_le: string;
 };
 
+type Paiement = {
+  id: string;
+  type_paiement: string;
+  montant: number;
+  methode: string;
+  annee_scolaire: string;
+  paye_le: string;
+};
+
+const typePaiementLabel: Record<string, string> = {
+  cotisation: "Cotisation",
+  don: "Don",
+  autre: "Autre paiement",
+};
+
+const methodePaiementLabel: Record<string, string> = {
+  especes: "Espèces",
+  orange_money: "Orange Money",
+  wave: "Wave",
+  autre: "Autre",
+};
+
+const formaterMontant = new Intl.NumberFormat("fr-FR", {
+  maximumFractionDigits: 0,
+});
+
 export default function EspaceMembre() {
   const supabase = createClient();
   const [connecte, setConnecte] = useState(false);
   const [chargement, setChargement] = useState(true);
   const [membre, setMembre] = useState<Membre | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [paiements, setPaiements] = useState<Paiement[]>([]);
+  const [chargementPaiements, setChargementPaiements] = useState(false);
+  const [erreurPaiements, setErreurPaiements] = useState("");
   const [erreur, setErreur] = useState("");
   const [notifStatut, setNotifStatut] = useState<"inactif" | "en_cours" | "actif" | "erreur">(
     "inactif"
@@ -43,13 +72,16 @@ export default function EspaceMembre() {
   async function verifier() {
     const { data } = await supabase.auth.getUser();
     if (data.user) {
-      await chargerProfil(data.user.id);
+      const { data: session } = await supabase.auth.getSession();
+      if (session.session?.access_token) {
+        await chargerProfil(data.user.id, session.session.access_token);
+      }
       setConnecte(true);
     }
     setChargement(false);
   }
 
-  async function chargerProfil(userId: string) {
+  async function chargerProfil(userId: string, accessToken: string) {
     const { data: m } = await supabase
       .from("membres")
       .select("id, numero_membre, prenom, nom, classe, annee_scolaire, statut, photo_url")
@@ -63,6 +95,38 @@ export default function EspaceMembre() {
         .eq("membre_id", (m as Membre).id)
         .order("cree_le", { ascending: false });
       setNotifications((notifs as Notification[]) ?? []);
+    }
+    await chargerPaiements(accessToken);
+  }
+
+  async function chargerPaiements(accessToken: string) {
+    setChargementPaiements(true);
+    setErreurPaiements("");
+    try {
+      const response = await fetch("/api/membre/paiements", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const result: unknown = await response.json();
+      if (!result || typeof result !== "object") {
+        throw new Error("Réponse invalide lors du chargement des paiements.");
+      }
+      const data = result as { paiements?: unknown; error?: unknown };
+      if (!response.ok || !Array.isArray(data.paiements)) {
+        throw new Error(
+          typeof data.error === "string"
+            ? data.error
+            : "Impossible de charger l’historique de tes paiements."
+        );
+      }
+      setPaiements(data.paiements as Paiement[]);
+    } catch (paiementError) {
+      setErreurPaiements(
+        paiementError instanceof Error
+          ? paiementError.message
+          : "Une erreur inattendue est survenue au chargement des paiements."
+      );
+    } finally {
+      setChargementPaiements(false);
     }
   }
 
@@ -94,11 +158,11 @@ export default function EspaceMembre() {
       email: formData.get("email") as string,
       password: formData.get("password") as string,
     });
-    if (error || !data.user) {
+    if (error || !data.user || !data.session?.access_token) {
       setErreur("E-mail ou mot de passe incorrect.");
       return;
     }
-    await chargerProfil(data.user.id);
+    await chargerProfil(data.user.id, data.session.access_token);
     setConnecte(true);
   }
 
@@ -106,6 +170,7 @@ export default function EspaceMembre() {
     await supabase.auth.signOut();
     setConnecte(false);
     setMembre(null);
+    setPaiements([]);
   }
 
   if (chargement) {
@@ -212,6 +277,60 @@ export default function EspaceMembre() {
             <Link href="/membre/assistant" className="btn btn-outline">
               🤖 Poser une question à l’assistant
             </Link>
+          </div>
+
+          <div style={{ marginTop: 32 }}>
+            <h2 style={{ fontSize: "1.2rem" }}>Mes cotisations et paiements</h2>
+            {chargementPaiements ? (
+              <p role="status" style={{ color: "#6b6656" }}>
+                Chargement de ton historique...
+              </p>
+            ) : erreurPaiements ? (
+              <p role="alert" style={{ color: "#8a2d2d" }}>
+                {erreurPaiements}
+              </p>
+            ) : paiements.length === 0 ? (
+              <p style={{ color: "#6b6656" }}>
+                Aucun paiement n’est encore enregistré pour ton compte.
+              </p>
+            ) : (
+              <>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {paiements.map((paiement) => (
+                    <div key={paiement.id} className="card">
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          gap: 16,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <strong>{typePaiementLabel[paiement.type_paiement] ?? paiement.type_paiement}</strong>
+                        <strong>{formaterMontant.format(Number(paiement.montant))} FCFA</strong>
+                      </div>
+                      <p style={{ color: "#6b6656", margin: "6px 0 0" }}>
+                        Année scolaire : {paiement.annee_scolaire}
+                      </p>
+                      <p style={{ color: "#6b6656", margin: "4px 0 0" }}>
+                        {methodePaiementLabel[paiement.methode] ?? paiement.methode}
+                        {" · "}
+                        {new Date(paiement.paye_le).toLocaleDateString("fr-FR", {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        })}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                {paiements.length === 100 && (
+                  <p style={{ color: "#6b6656", fontSize: "0.85rem", marginTop: 12 }}>
+                    Les 100 paiements les plus récents sont affichés.
+                  </p>
+                )}
+              </>
+            )}
           </div>
 
           <div style={{ marginTop: 20 }}>

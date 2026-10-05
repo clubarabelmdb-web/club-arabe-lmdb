@@ -81,6 +81,8 @@ compte ni paiement. Pour ce service personnalisé, le nom, le numéro de membre,
 la classe, le statut et jusqu'aux 20 paiements récents sont transmis à Google
 Gemini. Le site ne conserve pas les conversations. Ne partage pas de mot de
 passe, de clé ou d'information personnelle supplémentaire dans les questions.
+L'espace membre affiche également les 100 paiements les plus récents du membre
+connecté, sans permettre leur modification.
 
 ## 6. Lancer le site en local
 
@@ -123,6 +125,7 @@ site est fermé.
 - ✅ Création automatique de la carte de membre + notification
 - ✅ Tableau de bord admin (statistiques, demandes, liste des membres)
 - ✅ Espace membre avec carte numérique + QR code + notifications
+- ✅ Historique personnel des cotisations et paiements dans l'espace membre
 - ✅ Base de données complète (actualités, activités, galerie, messages)
 - ✅ Sécurité par Row Level Security (RLS) sur toutes les tables
 
