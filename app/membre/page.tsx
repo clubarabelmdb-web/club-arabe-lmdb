@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 import { createClient } from "@/lib/supabaseClient";
@@ -65,6 +65,7 @@ function echapperHtml(value: string) {
 
 export default function EspaceMembre() {
   const supabase = createClient();
+  const carteQrRef = useRef<HTMLDivElement>(null);
   const [connecte, setConnecte] = useState(false);
   const [chargement, setChargement] = useState(true);
   const [membre, setMembre] = useState<Membre | null>(null);
@@ -72,6 +73,7 @@ export default function EspaceMembre() {
   const [paiements, setPaiements] = useState<Paiement[]>([]);
   const [chargementPaiements, setChargementPaiements] = useState(false);
   const [erreurPaiements, setErreurPaiements] = useState("");
+  const [statutCarte, setStatutCarte] = useState("");
   const [erreur, setErreur] = useState("");
   const [notifStatut, setNotifStatut] = useState<"inactif" | "en_cours" | "actif" | "erreur">(
     "inactif"
@@ -254,6 +256,144 @@ export default function EspaceMembre() {
     setPaiements([]);
   }
 
+  async function telechargerCarte() {
+    if (!membre) return;
+    setStatutCarte("");
+    const qrSvg = carteQrRef.current?.querySelector("svg");
+    if (!qrSvg) {
+      setStatutCarte("Le QR code n’est pas encore prêt. Réessaie dans un instant.");
+      return;
+    }
+
+    let qrObjectUrl: string | null = null;
+    let imageObjectUrl: string | null = null;
+    try {
+      const qrMarkup = new XMLSerializer().serializeToString(qrSvg);
+      qrObjectUrl = URL.createObjectURL(
+        new Blob([qrMarkup], { type: "image/svg+xml;charset=utf-8" })
+      );
+      const chargerImage = (src: string, crossOrigin = false) =>
+        new Promise<HTMLImageElement>((resolve, reject) => {
+          const image = new Image();
+          if (crossOrigin) image.crossOrigin = "anonymous";
+          image.onload = () => resolve(image);
+          image.onerror = () => reject(new Error("Impossible de charger une image de la carte."));
+          image.src = src;
+        });
+
+      const qrImage = await chargerImage(qrObjectUrl);
+      let photoImage: HTMLImageElement | null = null;
+      if (membre.photo_url) {
+        try {
+          photoImage = await chargerImage(membre.photo_url, true);
+        } catch {
+          photoImage = null;
+        }
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = 1050;
+      canvas.height = 660;
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("Le navigateur ne permet pas de créer l’image de la carte.");
+
+      context.fillStyle = "#073d2d";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.strokeStyle = "#d8b66a";
+      context.lineWidth = 8;
+      context.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+
+      context.fillStyle = "#e6c779";
+      context.font = "bold 34px Georgia, serif";
+      context.fillText("CLUB ARABE — LMDB", 64, 92);
+      context.fillStyle = "#f6f0dc";
+      context.font = "24px Georgia, serif";
+      context.fillText("Lycée Maba Diakhou Ba", 64, 132);
+      context.strokeStyle = "rgba(230, 199, 121, 0.65)";
+      context.lineWidth = 2;
+      context.beginPath();
+      context.moveTo(64, 158);
+      context.lineTo(986, 158);
+      context.stroke();
+
+      const photoX = 82;
+      const photoY = 218;
+      const photoSize = 176;
+      context.save();
+      context.beginPath();
+      context.arc(photoX + photoSize / 2, photoY + photoSize / 2, photoSize / 2, 0, Math.PI * 2);
+      context.clip();
+      if (photoImage) {
+        context.drawImage(photoImage, photoX, photoY, photoSize, photoSize);
+      } else {
+        context.fillStyle = "#d9e6d6";
+        context.fillRect(photoX, photoY, photoSize, photoSize);
+        context.fillStyle = "#0b5138";
+        context.font = "bold 58px Arial, sans-serif";
+        context.textAlign = "center";
+        context.textBaseline = "middle";
+        context.fillText(
+          `${membre.prenom[0] ?? ""}${membre.nom[0] ?? ""}`.toUpperCase(),
+          photoX + photoSize / 2,
+          photoY + photoSize / 2
+        );
+        context.textAlign = "start";
+        context.textBaseline = "alphabetic";
+      }
+      context.restore();
+
+      const qrSize = 220;
+      const qrX = 748;
+      const qrY = 244;
+      context.fillStyle = "#ffffff";
+      context.fillRect(qrX - 14, qrY - 14, qrSize + 28, qrSize + 28);
+      context.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
+
+      context.fillStyle = "#f6f0dc";
+      context.font = "bold 35px Arial, sans-serif";
+      context.fillText(`${membre.prenom} ${membre.nom}`, 300, 270, 410);
+      context.fillStyle = "#e6c779";
+      context.font = "28px Arial, sans-serif";
+      context.fillText(membre.classe, 300, 322, 410);
+      context.fillStyle = "#f6f0dc";
+      context.font = "24px monospace";
+      context.fillText(membre.numero_membre, 300, 390, 410);
+      context.fillStyle = "#d9e6d6";
+      context.font = "22px Arial, sans-serif";
+      context.fillText(`Année scolaire : ${membre.annee_scolaire}`, 300, 446, 410);
+      context.fillText(`Statut : ${membre.statut === "actif" ? "Actif" : "Inactif"}`, 300, 486, 410);
+      context.fillStyle = "#e6c779";
+      context.font = "18px Arial, sans-serif";
+      context.textAlign = "center";
+      context.fillText("Présente ce QR code pour vérifier ta carte", 850, 506);
+      context.textAlign = "start";
+
+      const imageBlob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, "image/png")
+      );
+      if (!imageBlob) throw new Error("La carte n’a pas pu être convertie en image.");
+
+      imageObjectUrl = URL.createObjectURL(imageBlob);
+      const lien = document.createElement("a");
+      lien.href = imageObjectUrl;
+      lien.download = `carte-${membre.numero_membre}.png`;
+      document.body.appendChild(lien);
+      lien.click();
+      lien.remove();
+      setStatutCarte("La carte a été téléchargée en PNG.");
+    } catch (downloadError) {
+      console.error("Erreur lors du téléchargement de la carte membre :", downloadError);
+      setStatutCarte(
+        downloadError instanceof Error
+          ? downloadError.message
+          : "Impossible de télécharger la carte sur cet appareil."
+      );
+    } finally {
+      if (qrObjectUrl) URL.revokeObjectURL(qrObjectUrl);
+      if (imageObjectUrl) URL.revokeObjectURL(imageObjectUrl);
+    }
+  }
+
   if (chargement) {
     return (
       <main className="container section">
@@ -339,7 +479,7 @@ export default function EspaceMembre() {
                   style={{ width: 72, height: 72, borderRadius: "50%", objectFit: "cover" }}
                 />
               )}
-              <div style={{ background: "#fff", padding: 8 }}>
+              <div ref={carteQrRef} style={{ background: "#fff", padding: 8 }}>
                 <QRCodeSVG value={membre.numero_membre} size={92} />
               </div>
               <div>
@@ -352,6 +492,23 @@ export default function EspaceMembre() {
                 </p>
               </div>
             </div>
+          </div>
+
+          <div style={{ marginTop: 16 }}>
+            <button type="button" className="btn btn-outline" onClick={telechargerCarte}>
+              Télécharger ma carte (PNG)
+            </button>
+            {statutCarte && (
+              <p
+                role="status"
+                style={{
+                  color: statutCarte.startsWith("La carte") ? "var(--emerald)" : "#8a2d2d",
+                  marginTop: 8,
+                }}
+              >
+                {statutCarte}
+              </p>
+            )}
           </div>
 
           <div style={{ marginTop: 20 }}>

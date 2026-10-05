@@ -84,6 +84,8 @@ passe, de clé ou d'information personnelle supplémentaire dans les questions.
 L'espace membre affiche également les 100 paiements les plus récents du membre
 connecté, sans permettre leur modification. Chaque paiement dispose d'un reçu
 imprimable ou enregistrable en PDF depuis le navigateur.
+La carte de membre peut être téléchargée en image PNG avec son QR code, le
+numéro de membre et les informations affichées dans l'espace personnel.
 Les administrateurs peuvent envoyer une annonce à tous les membres ou à une
 classe précise; les notifications push sont limitées aux abonnés de cette
 audience, tandis que l'annonce est aussi enregistrée dans leur espace membre.
@@ -131,6 +133,7 @@ site est fermé.
 - ✅ Espace membre avec carte numérique + QR code + notifications
 - ✅ Historique personnel des cotisations et paiements dans l'espace membre
 - ✅ Reçus de paiement imprimables / enregistrables en PDF
+- ✅ Carte de membre téléchargeable en PNG
 - ✅ Notifications administrateur ciblées sur tous les membres ou une classe
 - ✅ Base de données complète (actualités, activités, galerie, messages)
 - ✅ Sécurité par Row Level Security (RLS) sur toutes les tables
