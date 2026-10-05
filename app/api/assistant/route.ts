@@ -176,11 +176,13 @@ export async function POST(request: NextRequest) {
           name.startsWith("models/") &&
           !/image|audio|embedding/i.test(name)
       );
-    const priorite = ["models/gemini-2.5-flash", "models/gemini-2.5-flash-lite"];
-    modelesDisponibles = [
-      ...priorite.filter((name) => modelesAvecGeneration.includes(name)),
-      ...modelesAvecGeneration.filter((name) => !priorite.includes(name)),
-    ].slice(0, 3);
+    const modelesPrisEnCharge = [
+      "models/gemini-3-flash-preview",
+      "models/gemini-3.1-pro-preview",
+    ];
+    modelesDisponibles = modelesPrisEnCharge.filter((name) =>
+      modelesAvecGeneration.includes(name)
+    );
   } catch (error) {
     console.error("Impossible de lire la liste des modèles Gemini :", error);
     return NextResponse.json(
