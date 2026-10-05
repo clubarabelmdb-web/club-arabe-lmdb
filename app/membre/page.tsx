@@ -209,6 +209,12 @@ export default function EspaceMembre() {
           </div>
 
           <div style={{ marginTop: 20 }}>
+            <Link href="/membre/assistant" className="btn btn-outline">
+              🤖 Poser une question à l’assistant
+            </Link>
+          </div>
+
+          <div style={{ marginTop: 20 }}>
             {notifStatut === "actif" ? (
               <p style={{ color: "var(--emerald)", fontWeight: 600 }}>
                 🔔 Notifications activées

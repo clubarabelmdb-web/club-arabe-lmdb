@@ -70,13 +70,17 @@ Ajoute `SUPABASE_SERVICE_ROLE_KEY` dans les variables d'environnement de
 déploiement : cette clé est utilisée uniquement par le serveur pour créer les
 comptes et ne doit jamais être exposée dans le navigateur.
 
-L'assistant IA du tableau de bord utilise l'API Gemini. Pour l'activer, crée
+Les assistants IA utilisent l'API Gemini. Pour les activer, crée
 une clé API dans Google AI Studio puis ajoute-la dans les variables
 d'environnement Vercel sous `GEMINI_API_KEY` (sans préfixe `NEXT_PUBLIC_`).
 Cette clé reste côté serveur. L'assistant est réservé aux administrateurs,
 répond aux questions générales sur le site et ne consulte ni ne modifie les
-données des membres. Ne partage pas de mot de passe, de clé ou d'information
-personnelle dans les questions.
+données des membres. Dans l'espace membre, l'assistant peut répondre à partir
+de la fiche et des paiements du seul membre connecté; il ne modifie aucun
+compte ni paiement. Pour ce service personnalisé, le nom, le numéro de membre,
+la classe, le statut et jusqu'aux 20 paiements récents sont transmis à Google
+Gemini. Le site ne conserve pas les conversations. Ne partage pas de mot de
+passe, de clé ou d'information personnelle supplémentaire dans les questions.
 
 ## 6. Lancer le site en local
 
