@@ -50,6 +50,19 @@ const formaterMontant = new Intl.NumberFormat("fr-FR", {
   maximumFractionDigits: 0,
 });
 
+function echapperHtml(value: string) {
+  return value.replace(/[&<>"']/g, (character) => {
+    const replacements: Record<string, string> = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    };
+    return replacements[character];
+  });
+}
+
 export default function EspaceMembre() {
   const supabase = createClient();
   const [connecte, setConnecte] = useState(false);
@@ -128,6 +141,74 @@ export default function EspaceMembre() {
     } finally {
       setChargementPaiements(false);
     }
+  }
+
+  function genererRecu(paiement: Paiement) {
+    if (!membre) return;
+    const fenetre = window.open("", "_blank");
+    if (!fenetre) {
+      setErreurPaiements("Autorise les fenêtres pop-up pour imprimer ou enregistrer ton reçu.");
+      return;
+    }
+    fenetre.opener = null;
+
+    const numeroRecu = paiement.id.slice(0, 8).toUpperCase();
+    const datePaiement = new Date(paiement.paye_le);
+    const dateAffichee = Number.isNaN(datePaiement.getTime())
+      ? "Date non disponible"
+      : datePaiement.toLocaleDateString("fr-FR", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        });
+    const nomAffiche = `${membre.prenom} ${membre.nom}`;
+    const typeAffiche = typePaiementLabel[paiement.type_paiement] ?? paiement.type_paiement;
+    const methodeAffiche = methodePaiementLabel[paiement.methode] ?? paiement.methode;
+    const montantAffiche = `${formaterMontant.format(Number(paiement.montant))} FCFA`;
+
+    fenetre.document.open();
+    fenetre.document.write(`<!DOCTYPE html>
+      <html lang="fr">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Reçu ${echapperHtml(numeroRecu)} - Club Arabe LMDB</title>
+        <style>
+          body { font-family: Georgia, serif; color: #1f2933; max-width: 640px; margin: 40px auto; padding: 0 24px; }
+          header { border-bottom: 3px solid #0f5132; padding-bottom: 18px; margin-bottom: 24px; }
+          header h1 { color: #0f5132; font-size: 1.3rem; margin: 0; }
+          header p { color: #6b6656; margin: 4px 0 0; }
+          h2 { color: #0f5132; font-size: 1.6rem; margin-bottom: 4px; }
+          .numero { color: #6b6656; margin-bottom: 24px; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 32px; }
+          td { padding: 10px 0; border-bottom: 1px solid #dce3d7; }
+          td:first-child { color: #6b6656; }
+          td:last-child { text-align: right; font-weight: 600; }
+          .montant { color: #0f5132; font-size: 1.5rem; font-weight: 700; text-align: right; }
+          .pied { color: #6b6656; font-size: .85rem; margin-top: 48px; text-align: center; }
+          @media print { body { margin: 0 auto; } .actions { display: none; } }
+        </style>
+      </head>
+      <body>
+        <header>
+          <h1>CLUB ARABE</h1>
+          <p>Lycée Maba Diakhou Ba</p>
+        </header>
+        <h2>Reçu de paiement</h2>
+        <p class="numero">N° ${echapperHtml(numeroRecu)} — ${echapperHtml(dateAffichee)}</p>
+        <table>
+          <tr><td>Reçu de</td><td>${echapperHtml(nomAffiche)}</td></tr>
+          <tr><td>Numéro de membre</td><td>${echapperHtml(membre.numero_membre)}</td></tr>
+          <tr><td>Type</td><td>${echapperHtml(typeAffiche)}</td></tr>
+          <tr><td>Méthode de paiement</td><td>${echapperHtml(methodeAffiche)}</td></tr>
+          <tr><td>Année scolaire</td><td>${echapperHtml(paiement.annee_scolaire)}</td></tr>
+        </table>
+        <p class="montant">${echapperHtml(montantAffiche)}</p>
+        <p class="pied">Reçu généré à partir d’un paiement enregistré par le Club Arabe — Lycée Maba Diakhou Ba.</p>
+        <p class="actions"><button onclick="window.print()">Imprimer ou enregistrer en PDF</button></p>
+      </body>
+      </html>`);
+    fenetre.document.close();
   }
 
   async function activerNotifications() {
@@ -321,6 +402,14 @@ export default function EspaceMembre() {
                           year: "numeric",
                         })}
                       </p>
+                      <button
+                        type="button"
+                        className="btn btn-outline"
+                        style={{ marginTop: 12 }}
+                        onClick={() => genererRecu(paiement)}
+                      >
+                        Télécharger / imprimer le reçu
+                      </button>
                     </div>
                   ))}
                 </div>
