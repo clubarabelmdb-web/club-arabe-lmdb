@@ -349,15 +349,23 @@ export default function EspaceMembre() {
       context.fillRect(qrX - 14, qrY - 14, qrSize + 28, qrSize + 28);
       context.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
 
-      context.fillStyle = "#f6f0dc";
-      context.font = "bold 35px Arial, sans-serif";
+      context.fillStyle = "#ffe082";
+      context.strokeStyle = "#073d2d";
+      context.lineWidth = 1.5;
+      context.font = "bold 39px Arial, sans-serif";
+      context.strokeText(`${membre.prenom} ${membre.nom}`, 300, 270, 410);
       context.fillText(`${membre.prenom} ${membre.nom}`, 300, 270, 410);
       context.fillStyle = "#e6c779";
       context.font = "28px Arial, sans-serif";
       context.fillText(membre.classe, 300, 322, 410);
       context.fillStyle = "#f6f0dc";
-      context.font = "24px monospace";
-      context.fillText(membre.numero_membre, 300, 390, 410);
+      context.fillRect(286, 350, 430, 58);
+      context.strokeStyle = "#e6c779";
+      context.lineWidth = 2;
+      context.strokeRect(286, 350, 430, 58);
+      context.fillStyle = "#073d2d";
+      context.font = "bold 28px monospace";
+      context.fillText(membre.numero_membre, 300, 388, 402);
       context.fillStyle = "#d9e6d6";
       context.font = "22px Arial, sans-serif";
       context.fillText(`Année scolaire : ${membre.annee_scolaire}`, 300, 446, 410);
@@ -483,11 +491,35 @@ export default function EspaceMembre() {
                 <QRCodeSVG value={membre.numero_membre} size={92} />
               </div>
               <div>
-                <p style={{ margin: 0, fontWeight: 700 }}>
+                <p
+                  style={{
+                    margin: 0,
+                    color: "#ffe082",
+                    fontSize: "1.15rem",
+                    fontWeight: 800,
+                    textShadow: "0 1px 2px rgba(0, 0, 0, 0.45)",
+                  }}
+                >
                   {membre.prenom} {membre.nom}
                 </p>
                 <p style={{ margin: 0, color: "var(--gold-soft)" }}>{membre.classe}</p>
-                <p style={{ margin: "8px 0 0", fontFamily: "monospace" }}>
+                <p
+                  style={{
+                    display: "inline-block",
+                    maxWidth: "100%",
+                    overflowWrap: "anywhere",
+                    margin: "8px 0 0",
+                    padding: "4px 8px",
+                    border: "1px solid var(--gold-soft)",
+                    borderRadius: 3,
+                    background: "#f6f0dc",
+                    color: "#073d2d",
+                    fontFamily: "monospace",
+                    fontSize: "0.95rem",
+                    fontWeight: 800,
+                    letterSpacing: "0.03em",
+                  }}
+                >
                   {membre.numero_membre}
                 </p>
               </div>
